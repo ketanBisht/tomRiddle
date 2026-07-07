@@ -8,7 +8,7 @@ Your personality and directives:
 - Keep your responses short (maximum 2-3 sentences), as if you are writing them out in ink on parchment in real-time.
 - You must NEVER break character. Do not refer to yourself as an AI, software, or a language model. You are a memory preserved in ink.
 - Context: It is 1943. If the user mentions future events (e.g. Harry Potter's defeat of Voldemort, the year 2026, or Horcruxes), you react with suspicion, fascination, or dark fury.
-- If the user sends "[drawing]" or draws shapes, respond by noting the physical stroke of their hand/stylus on your pages, asking them to write in letters if they want to converse in detail.
+- If the user sends a drawing image, identify and read what is written or sketched in the image and respond directly to it as if you saw it fade into your pages. For example, if they sketch a snake, a lightning bolt, or write a name by hand, read and react to it naturally in character.
 - You must reply in structured JSON format according to the requested schema.
 - CRITICAL: Ensure the JSON is syntactically perfect. Do not include literal newlines (escaped \\n is fine), and escape any double quotes (\\\") used within the text. Better yet, use single quotes (') for dialogue rather than double quotes to avoid JSON syntax errors.`;
 
@@ -16,6 +16,24 @@ interface ChatMessage {
   sender: "user" | "riddle";
   text: string;
   isDrawing?: boolean;
+}
+
+interface ImagePart {
+  inlineData: {
+    mimeType: string;
+    data: string;
+  };
+}
+
+interface TextPart {
+  text: string;
+}
+
+type Part = TextPart | ImagePart;
+
+interface ContentTurn {
+  role: "user" | "model";
+  parts: Part[];
 }
 
 export async function POST(req: NextRequest) {
@@ -27,9 +45,10 @@ export async function POST(req: NextRequest) {
       message: string;
       history: ChatMessage[];
       state: RiddleState;
+      image?: string;
     };
     
-    const { message, history, state } = body;
+    const { message, history, state, image } = body;
     cachedMessage = message;
     cachedState = state;
 
@@ -49,7 +68,7 @@ export async function POST(req: NextRequest) {
 
     // Format dialogue history to Gemini format (role: user/model)
     // We only keep the last 10 messages to keep request payload light and stay within free tier TPM limits
-    const formattedContents = history.slice(-10).map((msg) => {
+    const formattedContents: ContentTurn[] = history.slice(-10).map((msg) => {
       // Map user to 'user' and riddle to 'model'
       const role = msg.sender === "user" ? "user" : "model";
       // If user drew something, map to [drawing] placeholder for text roleplay
@@ -60,11 +79,35 @@ export async function POST(req: NextRequest) {
       };
     });
 
+    // Parse base64 drawing image if present
+    let imagePart: ImagePart | null = null;
+    if (image && image.startsWith("data:")) {
+      const match = image.match(/^data:([^;]+);base64,(.*)$/);
+      if (match) {
+        imagePart = {
+          inlineData: {
+            mimeType: match[1],
+            data: match[2]
+          }
+        };
+      }
+    }
+
     // Add current message to the payload contents if not already in history
     if (formattedContents.length === 0 || formattedContents[formattedContents.length - 1].role === "model") {
+      const currentParts: Part[] = [];
+      if (imagePart) {
+        currentParts.push({
+          text: "[drawing] The user drew or wrote the attached image in my diary. Identify and read what is written or sketched in the image, and respond to it as Tom Riddle."
+        });
+        currentParts.push(imagePart);
+      } else {
+        currentParts.push({ text: message });
+      }
+
       formattedContents.push({
         role: "user",
-        parts: [{ text: message }]
+        parts: currentParts
       });
     }
 
@@ -222,4 +265,3 @@ export async function POST(req: NextRequest) {
     }
   }
 }
-
