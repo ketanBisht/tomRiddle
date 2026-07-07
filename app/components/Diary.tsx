@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { getRiddleResponse, RiddleState } from "../utils/riddleEngine";
+import { RiddleState } from "../utils/riddleEngine";
 import { audio } from "../utils/AudioEngine";
 
 export default function Diary() {
@@ -36,7 +36,9 @@ export default function Diary() {
   const [riddleText, setRiddleText] = useState("");
   const [riddleEmotion, setRiddleEmotion] = useState<"neutral" | "pleased" | "annoyed" | "hostile">("neutral");
   const [isRiddleWriting, setIsRiddleWriting] = useState(false);
+  const [isRiddleTextFading, setIsRiddleTextFading] = useState(false);
   const [flashGreen, setFlashGreen] = useState(false);
+  const fadeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Ref to scroll container for automatic scrolling of dialogue history
   const historyEndRef = useRef<HTMLDivElement | null>(null);
@@ -65,8 +67,31 @@ export default function Diary() {
     }
   };
 
+  // Dismiss Riddle's response and clear active page
+  const dismissRiddleText = () => {
+    if (isRiddleTextFading || !riddleText || isRiddleWriting) return;
+
+    if (fadeTimeoutRef.current) {
+      clearTimeout(fadeTimeoutRef.current);
+      fadeTimeoutRef.current = null;
+    }
+
+    setIsRiddleTextFading(true);
+    audio.playScratch(800, true);
+
+    setTimeout(() => {
+      setRiddleText("");
+      setIsRiddleTextFading(false);
+    }, 2200);
+  };
+
   // Reset Riddle Memory and Start Over
   const handleReset = () => {
+    if (fadeTimeoutRef.current) {
+      clearTimeout(fadeTimeoutRef.current);
+      fadeTimeoutRef.current = null;
+    }
+    setIsRiddleTextFading(false);
     audio.playPageFlip();
     setIsOpen(false);
     setDialogueHistory([]);
@@ -206,48 +231,94 @@ export default function Diary() {
   };
 
   // Trigger Riddle response logic
-  const triggerRiddleReply = (inputText: string) => {
+  const triggerRiddleReply = async (inputText: string) => {
     setIsRiddleWriting(true);
-    
-    // Get simulated response from engine
-    const { response, nextState } = getRiddleResponse(inputText, riddleState);
-    setRiddleState(nextState);
-    setRiddleEmotion(response.emotion);
 
-    // Audio effects for emotion transitions
-    if (response.emotion === "hostile") {
-      setFlashGreen(true);
-      audio.playHeartbeat();
-      audio.playWhisper();
-      setTimeout(() => setFlashGreen(false), 500);
-    } else if (response.emotion === "pleased") {
-      audio.playWhisper();
-    } else {
-      audio.playHeartbeat();
-    }
+    try {
+      const currentHistory = dialogueHistory.map((item) => ({
+        sender: item.sender,
+        text: item.text,
+        isDrawing: item.isDrawing,
+      }));
 
-    // Typewriter handwritten response logic
-    let charIndex = 0;
-    const textToType = response.text;
-    setRiddleText("");
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: inputText,
+          history: currentHistory,
+          state: riddleState,
+        }),
+      });
 
-    const typingInterval = setInterval(() => {
-      if (charIndex < textToType.length) {
-        const nextChar = textToType.charAt(charIndex);
-        setRiddleText((prev) => prev + nextChar);
-
-        // Sound effect: scribble letter
-        if (nextChar !== " " && nextChar !== ".") {
-          audio.playScratch(65, response.emotion === "pleased");
-        }
-
-        charIndex++;
-      } else {
-        clearInterval(typingInterval);
-        setIsRiddleWriting(false);
-        setDialogueHistory((prev) => [...prev, { sender: "riddle", text: textToType }]);
+      if (!response.ok) {
+        throw new Error("Failed to contact the Riddle AI server.");
       }
-    }, 55 + Math.random() * 35); // Human-like variable typing speed
+
+      const result = await response.json() as {
+        text: string;
+        emotion: "neutral" | "pleased" | "annoyed" | "hostile";
+        trustScore: number;
+      };
+
+      setRiddleState((prev) => ({
+        ...prev,
+        trustScore: result.trustScore,
+        conversationCount: prev.conversationCount + 1,
+        stage: result.trustScore >= 85 ? "control" : 
+               result.trustScore >= 60 ? "secrets" : 
+               result.trustScore >= 30 ? "bonding" : "intro",
+      }));
+      setRiddleEmotion(result.emotion);
+
+      // Audio effects for emotion transitions
+      if (result.emotion === "hostile") {
+        setFlashGreen(true);
+        audio.playHeartbeat();
+        audio.playWhisper();
+        setTimeout(() => setFlashGreen(false), 500);
+      } else if (result.emotion === "pleased") {
+        audio.playWhisper();
+      } else {
+        audio.playHeartbeat();
+      }
+
+      // Typewriter handwritten response logic
+      let charIndex = 0;
+      const textToType = result.text;
+      setRiddleText("");
+
+      const typingInterval = setInterval(() => {
+        if (charIndex < textToType.length) {
+          const nextChar = textToType.charAt(charIndex);
+          setRiddleText((prev) => prev + nextChar);
+
+          // Sound effect: scribble letter
+          if (nextChar !== " " && nextChar !== ".") {
+            audio.playScratch(65, result.emotion === "pleased");
+          }
+
+          charIndex++;
+        } else {
+          clearInterval(typingInterval);
+          setIsRiddleWriting(false);
+          setDialogueHistory((prev) => [...prev, { sender: "riddle", text: textToType }]);
+          
+          // Auto-fade text after 7 seconds of idle time
+          fadeTimeoutRef.current = setTimeout(() => {
+            dismissRiddleText();
+          }, 7000);
+        }
+      }, 55 + Math.random() * 35); // Human-like variable typing speed
+
+    } catch (err) {
+      console.error("Failed to fetch Riddle response:", err);
+      setIsRiddleWriting(false);
+      setRiddleText("Something went wrong in the ink... write to me again.");
+      setRiddleEmotion("neutral");
+    }
   };
 
   // Automatic scrolling to bottom of conversations
@@ -427,7 +498,12 @@ export default function Diary() {
               </div>
 
               {/* Central Writing / Drawing Canvas Container */}
-              <div className="relative flex-1 my-6 rounded border border-dashed border-amber-950/5 flex flex-col justify-center items-center overflow-hidden">
+              <div 
+                onClick={riddleText && !isRiddleWriting ? dismissRiddleText : undefined}
+                className={`relative flex-1 my-6 rounded border border-dashed border-amber-950/5 flex flex-col justify-center items-center overflow-hidden ${
+                  riddleText && !isRiddleWriting ? "cursor-pointer" : ""
+                }`}
+              >
                 
                 {/* Quill (Type) Input Mode */}
                 {inputMode === "type" && (
@@ -444,7 +520,9 @@ export default function Diary() {
 
                     {/* Tom Riddle's Handwriting Output (while actively writing) */}
                     {riddleText && (
-                      <div className="absolute inset-0 flex items-center justify-center p-6 text-center select-none pointer-events-none z-15">
+                      <div className={`absolute inset-0 flex flex-col items-center justify-center p-6 text-center select-none pointer-events-none z-15 ${
+                        isRiddleTextFading ? "ink-bleed-fade" : ""
+                      }`}>
                         <p 
                           className="font-riddle text-3xl tracking-wide select-none leading-relaxed"
                           style={{
@@ -455,11 +533,16 @@ export default function Diary() {
                         >
                           {riddleText}
                         </p>
+                        {!isRiddleWriting && !isRiddleTextFading && (
+                          <span className="absolute bottom-4 font-cinzel text-[9px] tracking-[0.2em] text-amber-900/40 animate-pulse">
+                            (Click page to continue...)
+                          </span>
+                        )}
                       </div>
                     )}
 
                     {/* Main input area */}
-                    {!isTextFading && !riddleText && (
+                    {!isTextFading && !riddleText && !isRiddleTextFading && (
                       <form onSubmit={handlePourHeartText} className="w-full h-full flex flex-col justify-between p-4">
                         <textarea
                           value={userText}
@@ -489,7 +572,9 @@ export default function Diary() {
                     
                     {/* Tom Riddle's Handwriting Output (while active) */}
                     {riddleText && (
-                      <div className="absolute inset-0 flex items-center justify-center p-6 text-center select-none pointer-events-none z-20">
+                      <div className={`absolute inset-0 flex flex-col items-center justify-center p-6 text-center select-none pointer-events-none z-20 ${
+                        isRiddleTextFading ? "ink-bleed-fade" : ""
+                      }`}>
                         <p 
                           className="font-riddle text-3xl tracking-wide leading-relaxed"
                           style={{
@@ -500,6 +585,11 @@ export default function Diary() {
                         >
                           {riddleText}
                         </p>
+                        {!isRiddleWriting && !isRiddleTextFading && (
+                          <span className="absolute bottom-4 font-cinzel text-[9px] tracking-[0.2em] text-amber-900/40 animate-pulse">
+                            (Click page to continue...)
+                          </span>
+                        )}
                       </div>
                     )}
 
@@ -516,7 +606,7 @@ export default function Diary() {
                     />
 
                     {/* Instructions / Drawing controls */}
-                    {!riddleText && (
+                    {!riddleText && !isRiddleTextFading && (
                       <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3 z-30">
                         <button
                           onClick={handlePourHeartDrawing}
