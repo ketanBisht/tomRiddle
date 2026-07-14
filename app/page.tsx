@@ -8,7 +8,7 @@ export default function DiaryScene() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <main className="flex-1 w-full min-h-screen desk-bg flex flex-col items-center justify-between py-12 px-4 relative select-none overflow-hidden">
+    <main className="flex-1 w-full min-h-screen desk-bg flex flex-col items-center justify-between py-6 sm:py-12 px-4 relative select-none overflow-hidden">
 
       {/* Candlelight Glow */}
       <div className="candlelight-overlay" />
@@ -32,10 +32,10 @@ export default function DiaryScene() {
             transition={{ duration: 0.5 }}
             className="text-center z-20 select-none pointer-events-none mt-4"
           >
-            <h2 className="text-amber-500/35 font-cinzel text-xs tracking-[0.6em] uppercase">
+            <h2 className="text-amber-500/35 font-cinzel text-[10px] sm:text-xs tracking-[0.3em] sm:tracking-[0.6em] uppercase">
               Magical Artifact Simulation
             </h2>
-            <h1 className="text-amber-100 font-cinzel text-3xl md:text-4xl tracking-[0.3em] font-bold mt-2 filter drop-shadow-[0_4px_6px_rgba(0,0,0,0.6)]">
+            <h1 className="text-amber-100 font-cinzel text-2xl sm:text-3xl md:text-4xl tracking-[0.15em] sm:tracking-[0.3em] font-bold mt-2 filter drop-shadow-[0_4px_6px_rgba(0,0,0,0.6)]">
               TOM RIDDLE&apos;S DIARY
             </h1>
             <div className="w-24 h-[1px] bg-gradient-to-r from-transparent via-amber-500/40 to-transparent mx-auto mt-3" />
@@ -75,9 +75,9 @@ export default function DiaryScene() {
               <div className="w-10 h-1.5 bg-yellow-700/80 rounded-full shadow border-t border-yellow-600/30" />
             </div>
 
-            <div className="max-w-md bg-zinc-900/75 backdrop-blur-md px-6 py-3.5 rounded-2xl border border-amber-900/30 text-center shadow-lg">
-              <p className="text-[11px] font-sans text-amber-100/75 leading-relaxed">
-                <strong className="text-amber-500 font-cinzel tracking-wider uppercase block mb-1">How to Speak to the Memory</strong>
+            <div className="w-full max-w-xs sm:max-w-md bg-zinc-900/75 backdrop-blur-md px-4 sm:px-6 py-3.5 rounded-2xl border border-amber-900/30 text-center shadow-lg">
+              <p className="text-[10px] sm:text-[11px] font-sans text-amber-100/75 leading-relaxed">
+                <strong className="text-amber-500 font-cinzel tracking-wider uppercase block mb-1 text-[11px] sm:text-xs">How to Speak to the Memory</strong>
                 Pour your heart into the pages by typing your words or drawing with your stylus/finger.
               </p>
             </div>

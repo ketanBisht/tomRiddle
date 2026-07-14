@@ -231,6 +231,7 @@ export default function Diary({ onOpenChange }: DiaryProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [inputMode, setInputMode] = useState<"type" | "draw">("type");
   const [isMuted, setIsMuted] = useState(true);
+  const [activeTab, setActiveTab] = useState<"history" | "write">("write");
 
   const [riddleState, setRiddleState] = useState<RiddleState>({
     userName: "", trustScore: 10, conversationCount: 0, stage: "intro", lastInputWasDrawing: false,
@@ -314,6 +315,7 @@ export default function Diary({ onOpenChange }: DiaryProps) {
     setRiddleState({ userName: "", trustScore: 10, conversationCount: 0, stage: "intro", lastInputWasDrawing: false });
     setRiddleEmotion("neutral");
     trustMotionValue.set(10);
+    setActiveTab("write");
     if (canvasRef.current) {
       const ctx = canvasRef.current.getContext("2d");
       ctx?.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
@@ -322,20 +324,32 @@ export default function Diary({ onOpenChange }: DiaryProps) {
 
   // Resize canvas
   useEffect(() => {
-    if (isOpen && inputMode === "draw" && canvasRef.current) {
-      const canvas = canvasRef.current;
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * window.devicePixelRatio;
-      canvas.height = rect.height * window.devicePixelRatio;
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-        ctx.strokeStyle = riddleEmotion === "hostile" ? "#580c0c" : "#1a100a";
-        ctx.lineWidth = 2.5; ctx.lineCap = "round"; ctx.lineJoin = "round";
-        ctxRef.current = ctx;
+    const handleResize = () => {
+      if (isOpen && inputMode === "draw" && canvasRef.current) {
+        const canvas = canvasRef.current;
+        const rect = canvas.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          const newWidth = Math.floor(rect.width * window.devicePixelRatio);
+          const newHeight = Math.floor(rect.height * window.devicePixelRatio);
+          if (canvas.width !== newWidth || canvas.height !== newHeight) {
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+            const canvasContext = canvas.getContext("2d");
+            if (canvasContext) {
+              canvasContext.scale(window.devicePixelRatio, window.devicePixelRatio);
+              canvasContext.strokeStyle = riddleEmotion === "hostile" ? "#580c0c" : "#1a100a";
+              canvasContext.lineWidth = 2.5; canvasContext.lineCap = "round"; canvasContext.lineJoin = "round";
+              ctxRef.current = canvasContext;
+            }
+          }
+        }
       }
-    }
-  }, [isOpen, inputMode, riddleEmotion]);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [isOpen, inputMode, riddleEmotion, activeTab]);
 
   const startDrawing = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
@@ -483,8 +497,7 @@ export default function Diary({ onOpenChange }: DiaryProps) {
   };
 
   return (
-    <div className={`relative w-full flex items-center justify-center book-container ${flashGreen ? "avada-flash" : ""}`}
-      style={{ height: isOpen ? "100%" : "720px", minHeight: isOpen ? "calc(100vh - 100px)" : "720px" }}
+    <div className={`relative w-full flex items-center justify-center book-container ${flashGreen ? "avada-flash" : ""} ${isOpen ? "h-[75vh] min-h-[500px] max-h-[650px] md:h-[650px]" : "h-[460px] xs:h-[570px] sm:h-[610px] md:h-[650px]"}`}
     >
       {/* Ambient ink motes */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
@@ -496,25 +509,43 @@ export default function Diary({ onOpenChange }: DiaryProps) {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.4 }}
-        className="absolute top-[-52px] right-4 flex items-center gap-3 z-40 bg-zinc-900/80 backdrop-blur-md px-4 py-2 rounded-full border border-amber-900/20 text-xs tracking-wider text-amber-100 font-cinzel"
+        className="absolute top-[-58px] left-4 right-4 md:left-auto md:right-4 flex items-center justify-between md:justify-end gap-2 md:gap-3 z-40 bg-zinc-900/85 backdrop-blur-md px-3 sm:px-4 py-2 rounded-full border border-amber-900/20 text-[10px] sm:text-xs tracking-wider text-amber-100 font-cinzel"
       >
-        <motion.button onClick={handleToggleMute} whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.94 }} className="flex items-center gap-1.5 cursor-pointer transition-colors hover:text-amber-400">
+        <motion.button onClick={handleToggleMute} whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.94 }} className="flex items-center gap-1 cursor-pointer transition-colors hover:text-amber-400">
           {isMuted ? (
-            <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" /></svg><span>Muted</span></>
+            <><svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" /></svg><span>Muted</span></>
           ) : (
-            <><svg className="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg><span className="text-amber-400">Ambient On</span></>
+            <><svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg><span className="text-amber-400"><span className="hidden sm:inline">Ambient </span>On</span></>
           )}
         </motion.button>
+
+        {/* Mobile page toggle — only shown when open on small screens */}
+        {isOpen && (
+          <div className="md:hidden flex gap-0.5 bg-amber-950/20 p-0.5 rounded border border-amber-950/15 text-[9px] tracking-wider uppercase font-semibold">
+            <button
+              onClick={(e) => { e.stopPropagation(); setActiveTab("history"); }}
+              className={`px-2.5 py-1 rounded-sm cursor-pointer transition-colors ${activeTab === "history" ? "bg-amber-950/30 text-amber-400 font-bold" : "opacity-60"}`}
+            >
+              Log
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); setActiveTab("write"); }}
+              className={`px-2.5 py-1 rounded-sm cursor-pointer transition-colors ${activeTab === "write" ? "bg-amber-950/30 text-amber-400 font-bold" : "opacity-60"}`}
+            >
+              Write
+            </button>
+          </div>
+        )}
 
         {/* Trust meter — visible when open */}
         <AnimatePresence>
           {isOpen && (
             <motion.div initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: "auto" }} exit={{ opacity: 0, width: 0 }}
-              className="flex items-center gap-2 overflow-hidden"
+              className="flex items-center gap-1.5 overflow-hidden"
             >
               <span className="text-amber-900/50">|</span>
-              <span className="text-amber-700/60 text-[9px] tracking-widest uppercase">Trust</span>
-              <div className="w-20 h-1.5 bg-amber-950/20 rounded-full overflow-hidden">
+              <span className="text-amber-700/60 text-[9px] tracking-widest uppercase hidden xs:inline">Trust</span>
+              <div className="w-12 sm:w-20 h-1.5 bg-amber-950/20 rounded-full overflow-hidden">
                 <motion.div className="h-full rounded-full"
                   animate={{ width: riddleState.trustScore + "%", backgroundColor: riddleEmotion === "hostile" ? "#991b1b" : riddleEmotion === "pleased" ? "#166534" : "#92400e" }}
                   style={{ width: trustSpring.get() + "%" }}
@@ -527,12 +558,13 @@ export default function Diary({ onOpenChange }: DiaryProps) {
 
         <span className="text-amber-900/50">|</span>
         <motion.button onClick={handleReset} whileHover={{ scale: 1.06, color: "#f59e0b" }} whileTap={{ scale: 0.94 }} className="cursor-pointer transition-colors">
-          Reset Diary
+          <span className="hidden sm:inline">Reset Diary</span>
+          <span className="sm:hidden">Reset</span>
         </motion.button>
       </motion.div>
 
       {/* ── Book scene ── */}
-      <div className="relative w-full h-full flex items-center justify-center">
+      <div className="relative w-full h-full flex items-center justify-center px-4">
 
         {/* CLOSED COVER */}
         <AnimatePresence>
@@ -547,7 +579,7 @@ export default function Diary({ onOpenChange }: DiaryProps) {
               onMouseLeave={handleCoverMouseLeave}
               style={{ rotateX, rotateY, transformStyle: "preserve-3d", willChange: "transform" }}
               transition={{ duration: 0.55, ease: "easeOut" as const }}
-              className="absolute w-[480px] h-[650px] leather-cover rounded-sm flex flex-col items-center justify-between py-10 px-8 cursor-pointer select-none shadow-[0_20px_55px_rgba(0,0,0,0.85)]"
+              className="absolute w-full max-w-[340px] xs:max-w-[420px] sm:max-w-[450px] md:w-[480px] h-auto aspect-[480/650] md:h-[650px] leather-cover rounded-sm flex flex-col items-center justify-between py-6 sm:py-10 px-6 sm:px-8 cursor-pointer select-none shadow-[0_20px_55px_rgba(0,0,0,0.85)]"
             >
               <BrassCorner position="tl" />
               <BrassCorner position="tr" />
@@ -560,13 +592,13 @@ export default function Diary({ onOpenChange }: DiaryProps) {
               </div>
 
               <div className="w-full px-3 pb-6">
-                <motion.div className="nameplate w-full py-2.5 px-4 flex items-center justify-center font-cinzel font-bold text-sm tracking-[0.18em] rounded-[2px]"
+                <motion.div className="nameplate w-full py-2 px-3 flex items-center justify-center font-cinzel font-bold text-[10px] xs:text-xs sm:text-sm tracking-[0.12em] xs:tracking-[0.18em] rounded-[2px]"
                   animate={{ textShadow: ["0 0 8px rgba(201,160,48,0.3)", "0 0 18px rgba(201,160,48,0.65)", "0 0 8px rgba(201,160,48,0.3)"] }}
                   transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
                 >
                   TOM MARVOLO RIDDLE
                 </motion.div>
-                <motion.p className="text-[9px] text-amber-700/40 font-cinzel tracking-[0.25em] uppercase text-center mt-3"
+                <motion.p className="text-[8px] sm:text-[9px] text-amber-700/40 font-cinzel tracking-[0.25em] uppercase text-center mt-3"
                   animate={{ opacity: [0.3, 0.65, 0.3] }}
                   transition={{ duration: 2.5, repeat: Infinity }}
                 >
@@ -585,12 +617,12 @@ export default function Diary({ onOpenChange }: DiaryProps) {
               variants={openBookVariants}
               initial="hidden"
               animate="visible"
-              className="w-[960px] h-[650px] flex rounded-sm shadow-[0_30px_90px_rgba(0,0,0,0.9)] overflow-hidden relative"
+              className="w-full max-w-[480px] md:max-w-[960px] h-[75vh] min-h-[500px] max-h-[650px] md:h-[650px] flex rounded-sm shadow-[0_30px_90px_rgba(0,0,0,0.9)] overflow-hidden relative mx-4 md:mx-0"
             >
               {/* LEFT PAGE — Dialogue History */}
               <motion.div
                 custom={0} variants={pageVariants} initial="hidden" animate="visible"
-                className="w-1/2 h-full parchment parchment-page-left flex flex-col justify-between p-10 select-none relative overflow-hidden"
+                className={`${activeTab === "history" ? "flex" : "hidden md:flex"} w-full md:w-1/2 h-full parchment parchment-page-left flex flex-col justify-between p-6 sm:p-10 select-none relative overflow-hidden`}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-amber-950/8 via-transparent to-amber-950/15 pointer-events-none" />
 
@@ -616,19 +648,19 @@ export default function Diary({ onOpenChange }: DiaryProps) {
                   </div>
                 </div>
 
-                <div className="text-[9px] text-amber-950/50 font-cinzel tracking-[0.3em] flex justify-between relative z-10 pt-2 border-t border-amber-950/20">
+                <div className="text-[9px] text-amber-950/50 font-cinzel tracking-[0.15em] xs:tracking-[0.3em] flex justify-between relative z-10 pt-2 border-t border-amber-950/20">
                   <span>LONDON, 1943</span><span>PAGE LVII</span>
                 </div>
               </motion.div>
 
               {/* Spine */}
-              <div className="w-8 h-full spine-shadow absolute left-1/2 top-0 bottom-0 transform -translate-x-1/2 z-20 pointer-events-none" />
+              <div className="hidden md:block w-8 h-full spine-shadow absolute left-1/2 top-0 bottom-0 transform -translate-x-1/2 z-20 pointer-events-none" />
 
               {/* RIGHT PAGE — Interactive writing area */}
               <motion.div
                 custom={1} variants={pageVariants} initial="hidden" animate="visible"
                 onClick={handleRightPageClick}
-                className={`w-1/2 h-full parchment parchment-page-right flex flex-col justify-between p-10 relative overflow-hidden ${riddleText && !isRiddleWriting ? "cursor-pointer" : ""}`}
+                className={`${activeTab === "write" ? "flex" : "hidden md:flex"} w-full md:w-1/2 h-full parchment parchment-page-right flex flex-col justify-between p-6 sm:p-10 relative overflow-hidden ${riddleText && !isRiddleWriting ? "cursor-pointer" : ""}`}
               >
                 <div className="absolute inset-0 bg-gradient-to-bl from-amber-950/8 via-transparent to-amber-950/15 pointer-events-none" />
 
@@ -660,9 +692,14 @@ export default function Diary({ onOpenChange }: DiaryProps) {
                       animate={{ opacity: [0.55, 0.95, 0.55], y: 0 }}
                       exit={{ opacity: 0, y: 4 }}
                       transition={{ duration: 0.25 }}
-                      className="text-[9px] uppercase font-cinzel tracking-widest text-amber-950/65 font-bold"
+                      className="text-[8px] sm:text-[9px] uppercase font-cinzel tracking-widest text-amber-950/65 font-bold"
                     >
-                      {isThinking ? "Reaching into memory..." : isRiddleWriting ? "Tom is writing..." : isTextFading || isCanvasFading ? "Absorbing ink..." : "Awaiting ink"}
+                      <span className="hidden xs:inline">
+                        {isThinking ? "Reaching into memory..." : isRiddleWriting ? "Tom is writing..." : isTextFading || isCanvasFading ? "Absorbing ink..." : "Awaiting ink"}
+                      </span>
+                      <span className="xs:hidden">
+                        {isThinking ? "Reaching..." : isRiddleWriting ? "Writing..." : isTextFading || isCanvasFading ? "Absorbing..." : "Awaiting"}
+                      </span>
                     </motion.span>
                   </AnimatePresence>
                 </div>
@@ -875,9 +912,8 @@ export default function Diary({ onOpenChange }: DiaryProps) {
                     )}
                   </AnimatePresence>
                 </div>
-
                 {/* Bottom page marker */}
-                <div className="text-[9px] text-amber-950/50 font-cinzel tracking-[0.3em] flex justify-between relative z-10 pt-2 border-t border-amber-950/20">
+                <div className="text-[9px] text-amber-950/50 font-cinzel tracking-[0.12em] xs:tracking-[0.3em] flex justify-between relative z-10 pt-2 border-t border-amber-950/20">
                   <span>PAGE LVIII</span>
                   <span>PROPERTY OF T. M. RIDDLE</span>
                 </div>

@@ -105,6 +105,17 @@
     inset 0 0 60px rgba(80, 35, 5, 0.20);
 }
 
+@media (max-width: 767px) {
+  .parchment-page-left,
+  .parchment-page-right {
+    border-left: none;
+    border-right: none;
+    border-top-right-radius: inherit;
+    box-shadow:
+      inset 0 0 40px rgba(80, 35, 5, 0.35);
+  }
+}
+
 /* ========================
    BLACK LEATHER COVER
    Matte deep-black, like the movie prop
