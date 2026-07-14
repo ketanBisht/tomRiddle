@@ -61,28 +61,9 @@ export default function DiaryScene() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 16, transition: { duration: 0.25 } }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-center z-20 flex flex-col items-center gap-4"
+            className="absolute bottom-8 w-full text-center z-20 pointer-events-none"
           >
-            {/* Candle */}
-            <div className="fixed bottom-8 left-8 hidden lg:flex flex-col items-center justify-end h-28 pointer-events-none z-10">
-              <div className="relative w-3.5 h-6 rounded-t-full bg-gradient-to-b from-amber-200 via-orange-500 to-red-600 blur-[0.5px] animate-[flicker_1s_infinite_alternate_ease-in-out] shadow-[0_0_15px_rgba(249,115,22,0.6)]">
-                <div className="absolute bottom-0 left-1 w-1.5 h-1.5 bg-blue-600 rounded-full filter blur-[0.2px]" />
-              </div>
-              <div className="w-[1.5px] h-2 bg-zinc-800" />
-              <div className="w-5 h-16 bg-gradient-to-r from-amber-100 to-amber-200/90 rounded-t-sm shadow-md border-r border-amber-300/30 flex flex-col items-center">
-                <div className="w-2 h-4 bg-amber-100/90 rounded-b-full ml-[-8px]" />
-              </div>
-              <div className="w-10 h-1.5 bg-yellow-700/80 rounded-full shadow border-t border-yellow-600/30" />
-            </div>
-
-            <div className="w-full max-w-xs sm:max-w-md bg-zinc-900/75 backdrop-blur-md px-4 sm:px-6 py-3.5 rounded-2xl border border-amber-900/30 text-center shadow-lg">
-              <p className="text-[10px] sm:text-[11px] font-sans text-amber-100/75 leading-relaxed">
-                <strong className="text-amber-500 font-cinzel tracking-wider uppercase block mb-1 text-[11px] sm:text-xs">How to Speak to the Memory</strong>
-                Pour your heart into the pages by typing your words or drawing with your stylus/finger.
-              </p>
-            </div>
-
-            <p className="text-[9px] font-cinzel text-amber-800/60 tracking-[0.2em] uppercase select-none mt-2">
+            <p className="text-[9px] font-cinzel text-amber-800/40 tracking-[0.25em] uppercase select-none">
               &copy; 1943 T.M. RIDDLE. PRESERVED IN INK FOR FIFTY YEARS.
             </p>
           </motion.footer>

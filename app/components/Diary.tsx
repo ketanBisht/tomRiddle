@@ -98,19 +98,31 @@ function BurnScar() {
 // ─────────────────────────────────────────────────────────────────────────────
 function BrassCorner({ position }: { position: "tl" | "tr" | "bl" | "br" }) {
   const cls = { tl: "top-0 left-0", tr: "top-0 right-0", bl: "bottom-0 left-0", br: "bottom-0 right-0" }[position];
-  const polys = { tl: "0,0 48,0 0,48", tr: "48,0 0,0 48,48", bl: "0,48 0,0 48,48", br: "48,48 48,0 0,48" };
-  const hRect = { tl: [0, 0], tr: [0, 0], bl: [0, 41], br: [0, 41] }[position];
-  const vRect = { tl: [0, 0], tr: [41, 0], bl: [0, 0], br: [41, 0] }[position];
+  const rot = { tl: 0, tr: 90, br: 180, bl: 270 }[position];
   const id = `bc_${position}`;
+  
   return (
-    <svg className={`absolute w-12 h-12 z-10 ${cls}`} viewBox="0 0 48 48" fill="none">
-      <polygon points={polys[position]} fill={`url(#${id}g)`} />
-      <rect x={hRect[0]} y={hRect[1]} width="48" height="7" fill={`url(#${id}h)`} rx="1"/>
-      <rect x={vRect[0]} y={vRect[1]} width="7" height="48" fill={`url(#${id}v)`} rx="1"/>
+    <svg className={`absolute w-8 h-8 sm:w-12 sm:h-12 z-20 ${cls}`} viewBox="0 0 50 50" fill="none" style={{ transform: `rotate(${rot}deg)` }}>
+      <path
+        d="M 0 0 L 50 0 C 40 15 15 40 0 50 Z"
+        fill={`url(#${id}g)`}
+        stroke="#4a3311"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M 3 3 L 42 3 C 34 14 14 34 3 42 Z"
+        fill="none"
+        stroke="#ffd700"
+        strokeWidth="0.5"
+        opacity="0.5"
+      />
       <defs>
-        <linearGradient id={`${id}g`} x1="0" y1="0" x2="48" y2="48"><stop offset="0%" stopColor="#e8c460"/><stop offset="50%" stopColor="#a87820"/><stop offset="100%" stopColor="#6a4c10"/></linearGradient>
-        <linearGradient id={`${id}h`} x1="0" y1="0" x2="48" y2="0"><stop offset="0%" stopColor="#e8c460"/><stop offset="100%" stopColor="#7a5820"/></linearGradient>
-        <linearGradient id={`${id}v`} x1="0" y1="0" x2="0" y2="48"><stop offset="0%" stopColor="#d4aa40"/><stop offset="100%" stopColor="#6a4010"/></linearGradient>
+        <linearGradient id={`${id}g`} x1="0" y1="0" x2="50" y2="50">
+          <stop offset="0%" stopColor="#f5d688" />
+          <stop offset="40%" stopColor="#c59b48" />
+          <stop offset="100%" stopColor="#7a5820" />
+        </linearGradient>
       </defs>
     </svg>
   );
@@ -795,6 +807,11 @@ export default function Diary({ onOpenChange }: DiaryProps) {
   const stopDrawing = () => setIsDrawing(false);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handlePourHeartText(e as any);
+      return;
+    }
     if (e.key !== "Enter" && e.key !== "Backspace" && e.key !== "Shift") audio.playScratch(60, true);
   };
 
@@ -1115,19 +1132,23 @@ export default function Diary({ onOpenChange }: DiaryProps) {
   };
 
   return (
-    <div className={`relative w-full flex items-center justify-center book-container ${flashGreen ? "avada-flash" : ""} ${isCrucioShaking ? "crucio-shake" : ""} ${activeProp === "fang" ? "fang-cursor" : ""} ${activeProp === "sword" ? "sword-cursor" : ""} ${isOpen ? "h-[75vh] min-h-[500px] max-h-[650px] md:h-[650px]" : "h-[460px] xs:h-[570px] sm:h-[610px] md:h-[650px]"}`}
-    >
+    <>
       {/* Screaming full screen green flash */}
-      {isScreaming && <div className="screaming-overlay" />}
+      {isScreaming && <div className="screaming-overlay" style={{ zIndex: 9999 }} />}
 
       {/* ⚡ CRUCIO OVERLAY — red crackle flash */}
       {isCrucioShaking && (
-        <div className="crucio-overlay" />
+        <div className="crucio-overlay" style={{ zIndex: 9998 }} />
+      )}
+
+      {/* ⚡ GREEN FLASH OVERLAY (Full Screen) */}
+      {flashGreen && (
+        <div className="avada-flash" style={{ position: 'fixed', inset: 0, zIndex: 9997, pointerEvents: 'none', mixBlendMode: 'screen' }} />
       )}
 
       {/* Red Sword Slash Overlay line */}
       {hasSlashed && (
-        <div className="sword-slash-line" />
+        <div className="sword-slash-line" style={{ position: 'fixed', zIndex: 9996 }} />
       )}
 
       {/* 🔦 LUMOS DARKNESS OVERLAY — covers EVERYTHING with spotlight following cursor */}
@@ -1135,6 +1156,9 @@ export default function Diary({ onOpenChange }: DiaryProps) {
         <div
           className="lumos-darkness-overlay"
           style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9995,
             background: `radial-gradient(circle 160px at ${lumosMousePos.x}px ${lumosMousePos.y}px, transparent 0%, rgba(0,0,0,0.97) 100%)`,
           }}
         >
@@ -1151,6 +1175,9 @@ export default function Diary({ onOpenChange }: DiaryProps) {
         </div>
       )}
 
+      <div className={`relative w-full flex items-center justify-center book-container ${isCrucioShaking ? "crucio-shake" : ""} ${activeProp === "fang" ? "fang-cursor" : ""} ${activeProp === "sword" ? "sword-cursor" : ""} ${isOpen ? "h-[75vh] min-h-[500px] max-h-[650px] md:h-[650px]" : "h-[460px] xs:h-[570px] sm:h-[610px] md:h-[650px]"}`}
+      >
+
       {/* Ambient ink motes */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         {MOTE_CONFIG.map((cfg, i) => <InkMote key={i} config={cfg} />)}
@@ -1161,7 +1188,7 @@ export default function Diary({ onOpenChange }: DiaryProps) {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.4 }}
-        className="absolute top-[-58px] left-4 right-4 md:left-auto md:right-4 flex items-center justify-between md:justify-end gap-2 md:gap-3 z-40 bg-zinc-900/85 backdrop-blur-md px-3 sm:px-4 py-2 rounded-full border border-amber-900/20 text-[10px] sm:text-xs tracking-wider text-amber-100 font-cinzel"
+        className="absolute top-[-75px] xs:top-[-65px] md:top-[-58px] left-2 right-2 md:left-auto md:right-4 flex flex-wrap items-center justify-center md:justify-end gap-x-2 gap-y-1.5 md:gap-3 z-[160] bg-zinc-900/85 backdrop-blur-md px-2 sm:px-4 py-1.5 sm:py-2 rounded-xl md:rounded-full border border-amber-900/20 text-[9px] sm:text-[10px] md:text-xs tracking-wider text-amber-100 font-cinzel max-w-full"
       >
         <motion.button onClick={handleToggleMute} whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.94 }} className="flex items-center gap-1 cursor-pointer transition-colors hover:text-amber-400">
           {isMuted ? (
@@ -1263,8 +1290,16 @@ export default function Diary({ onOpenChange }: DiaryProps) {
               onMouseLeave={handleCoverMouseLeave}
               style={{ rotateX, rotateY, transformStyle: "preserve-3d", willChange: "transform" }}
               transition={{ duration: 0.55, ease: "easeOut" as const }}
-              className={`absolute w-full max-w-[340px] xs:max-w-[420px] sm:max-w-[450px] md:w-[480px] h-auto aspect-[480/650] md:h-[650px] leather-cover rounded-sm flex flex-col items-center justify-between py-6 sm:py-10 px-6 sm:px-8 cursor-pointer select-none shadow-[0_20px_55px_rgba(0,0,0,0.85)] ${hasSlashed ? "book-slashed-left" : ""}`}
+              className={`absolute w-full max-w-[340px] xs:max-w-[420px] sm:max-w-[450px] md:w-[480px] h-auto aspect-[480/650] md:h-[650px] cursor-pointer select-none ${hasSlashed ? "book-slashed-left" : ""}`}
             >
+              {/* PAGE EDGES BLOCK (underneath the cover for 3D depth) */}
+              <div className="absolute inset-0 translate-x-[4px] translate-y-[6px] sm:translate-x-[6px] sm:translate-y-[8px] rounded-r-md rounded-b-md bg-[#eaddb6] border-r-[3px] border-b-[4px] border-[#bda674] shadow-[15px_20px_40px_rgba(0,0,0,0.85)] z-0" style={{ backgroundImage: "repeating-linear-gradient(to bottom, transparent, transparent 2px, rgba(139,115,85,0.1) 2px, rgba(139,115,85,0.1) 4px)" }}>
+                {/* Yellow bookmark ribbon peeking out bottom */}
+                <div className="absolute bottom-[-10px] left-12 w-4 h-6 bg-[#d9ad36] rounded-b-sm border-x border-b border-[#a87c1c] shadow-md z-0" />
+              </div>
+
+              {/* MAIN LEATHER COVER */}
+              <div className="absolute inset-0 leather-cover rounded-sm flex flex-col items-center justify-between py-6 sm:py-10 px-6 sm:px-8 z-10 border border-[#2a2622]">
               <BrassCorner position="tl" />
               <BrassCorner position="tr" />
               <BrassCorner position="bl" />
@@ -1272,8 +1307,6 @@ export default function Diary({ onOpenChange }: DiaryProps) {
               <div className="absolute inset-[2px] rounded-sm border border-white/[0.03] pointer-events-none" />
 
               <div className="flex-1 flex items-center justify-center w-full relative">
-                <BurnScar />
-
                 {/* Render dynamically added burn scars on cover */}
                 {burnScars.filter((s) => s.side === "cover").map((scar, idx) => (
                   <div
@@ -1299,19 +1332,20 @@ export default function Diary({ onOpenChange }: DiaryProps) {
                 ))}
               </div>
 
-              <div className="w-full px-3 pb-6">
-                <motion.div className="nameplate w-full py-2 px-3 flex items-center justify-center font-cinzel font-bold text-[10px] xs:text-xs sm:text-sm tracking-[0.12em] xs:tracking-[0.18em] rounded-[2px]"
-                  animate={{ textShadow: ["0 0 8px rgba(201,160,48,0.3)", "0 0 18px rgba(201,160,48,0.65)", "0 0 8px rgba(201,160,48,0.3)"] }}
+              <div className="w-full px-4 sm:px-6 pb-6 sm:pb-8 flex flex-col items-center relative z-20">
+                <motion.div className="nameplate w-auto inline-block py-2 sm:py-3 px-4 sm:px-10 border-[1.5px] border-[#e8c460] bg-[#1a1816] flex items-center justify-center font-cinzel font-bold text-[9px] xs:text-[11px] sm:text-base tracking-[0.25em] text-[#e8c460] rounded-[1px] shadow-[inset_0_0_10px_rgba(0,0,0,0.9),_0_6px_15px_rgba(0,0,0,0.8)]"
+                  animate={{ textShadow: ["0 0 6px rgba(201,160,48,0.2)", "0 0 12px rgba(201,160,48,0.5)", "0 0 6px rgba(201,160,48,0.2)"] }}
                   transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
                 >
                   {hasSlashed ? "DESTROYED" : "TOM MARVOLO RIDDLE"}
                 </motion.div>
-                <motion.p className="text-[8px] sm:text-[9px] text-amber-700/40 font-cinzel tracking-[0.25em] uppercase text-center mt-3"
-                  animate={{ opacity: [0.3, 0.65, 0.3] }}
+                <motion.p className="text-[8px] sm:text-[9px] text-[#e8c460]/30 font-cinzel tracking-[0.25em] uppercase text-center mt-4 drop-shadow-md"
+                  animate={{ opacity: [0.3, 0.7, 0.3] }}
                   transition={{ duration: 2.5, repeat: Infinity }}
                 >
                   {hasSlashed ? "Stitch memories with Reset" : activeProp === "fang" ? "Click cover to stab" : activeProp === "sword" ? "Click cover to slash" : "Click to open"}
                 </motion.p>
+              </div>
               </div>
             </motion.div>
           )}
@@ -1333,7 +1367,7 @@ export default function Diary({ onOpenChange }: DiaryProps) {
                 custom={0} variants={pageVariants} initial="hidden" animate="visible"
                 onClick={(e) => { if (activeProp === "fang" || activeProp === "sword") handlePageClick(e, "left-page"); }}
                 onMouseMove={handleMouseMoveLumos}
-                className={`${activeTab === "history" ? "flex" : "hidden md:flex"} w-full md:w-1/2 h-full parchment parchment-page-left flex flex-col justify-between p-6 sm:p-10 select-none relative overflow-hidden ${hasSlashed ? "book-slashed-left" : ""} ${ringDragging ? "ring-reveal-cursor" : ""}`}
+                className={`${activeTab === "history" ? "flex" : "hidden md:flex"} w-full md:w-1/2 h-full parchment parchment-page-left flex flex-col justify-between p-4 sm:p-8 md:p-10 select-none relative overflow-hidden ${hasSlashed ? "book-slashed-left" : ""} ${ringDragging ? "ring-reveal-cursor" : ""}`}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-amber-950/8 via-transparent to-amber-950/15 pointer-events-none" />
 
@@ -1395,11 +1429,11 @@ export default function Diary({ onOpenChange }: DiaryProps) {
 
                 <div className={`flex flex-col gap-4 mt-2 relative z-10 h-full transition-opacity duration-300 ${ringDragging ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
                   <div className="flex flex-col pb-3 border-b border-amber-950/20">
-                    <h3 className="font-cinzel text-amber-950 text-base tracking-[0.25em] font-bold uppercase">T. M. Riddle</h3>
-                    <span className="text-[9px] font-cinzel text-amber-950/60 tracking-[0.3em] mt-0.5 uppercase">London, 1943 — Private Diary</span>
+                    <h3 className="font-cinzel text-amber-950 text-sm sm:text-base tracking-[0.25em] font-bold uppercase">T. M. Riddle</h3>
+                    <span className="text-[8px] sm:text-[9px] font-cinzel text-amber-950/60 tracking-[0.3em] mt-0.5 uppercase">London, 1943 — Private Diary</span>
                   </div>
 
-                  <div className="flex-1 overflow-y-auto pr-1 space-y-5 font-parchment text-[15px] leading-relaxed custom-scrollbar">
+                  <div className="flex-1 overflow-y-auto pr-1 space-y-5 font-parchment text-[14px] sm:text-[15px] leading-relaxed custom-scrollbar">
                     <AnimatePresence initial={false}>
                       {dialogueHistory.length === 0 ? (
                         <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
@@ -1500,21 +1534,15 @@ export default function Diary({ onOpenChange }: DiaryProps) {
                 {/* Main Content Wrapper (Fades out when Ring reveals secrets) */}
                 <div className={`flex flex-col h-full relative z-10 transition-opacity duration-300 ${ringDragging ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
                   {/* Top Controls */}
-                <div className="flex justify-between items-center z-30 relative">
-                  <div className="flex gap-1.5 bg-amber-950/12 p-0.5 rounded border border-amber-950/20 font-cinzel text-[9px] tracking-widest font-semibold uppercase">
+                <div className="flex justify-between items-center z-30 relative px-2 pt-1 opacity-50 hover:opacity-100 transition-opacity duration-500">
+                  <div className="flex gap-4 font-cinzel text-[10px] sm:text-xs tracking-[0.25em] uppercase">
                     {(["type", "draw"] as const).map((mode) => (
                       <motion.button
                         key={mode}
                         onClick={(e) => { e.stopPropagation(); setInputMode(mode); if (mode === "type") setHasDrawn(false); else setUserText(""); }}
-                        whileTap={{ scale: 0.93 }}
-                        className={`px-3 py-1.5 rounded-sm cursor-pointer relative ${inputMode === mode ? "text-amber-950 font-bold" : "text-amber-950/60 hover:text-amber-950/80"}`}
+                        className={`transition-all duration-300 ${inputMode === mode ? "text-amber-950 font-bold border-b border-amber-950/40 pb-0.5" : "text-amber-950/40 hover:text-amber-950/70"}`}
                       >
-                        {inputMode === mode && (
-                          <motion.span layoutId="tab-pill" className="absolute inset-0 bg-amber-950/20 rounded-sm"
-                            transition={{ type: "spring", bounce: 0.2, duration: 0.35 }}
-                          />
-                        )}
-                        <span className="relative z-10">{mode === "type" ? "✒ Quill" : "✍ Inkwell"}</span>
+                        {mode === "type" ? "Quill" : "Inkwell"}
                       </motion.button>
                     ))}
                   </div>
@@ -1527,7 +1555,7 @@ export default function Diary({ onOpenChange }: DiaryProps) {
                       animate={{ opacity: [0.55, 0.95, 0.55], y: 0 }}
                       exit={{ opacity: 0, y: 4 }}
                       transition={{ duration: 0.25 }}
-                      className="text-[8px] sm:text-[9px] uppercase font-cinzel tracking-widest text-amber-950/65 font-bold"
+                      className="text-[8px] sm:text-[9px] uppercase font-cinzel tracking-[0.3em] text-amber-950/60 font-bold"
                     >
                       <span className="hidden xs:inline">
                         {isThinking ? "Reaching into memory..." : isRiddleWriting ? "Tom is writing..." : isTextFading || isCanvasFading ? "Absorbing ink..." : "Awaiting ink"}
@@ -1606,24 +1634,22 @@ export default function Diary({ onOpenChange }: DiaryProps) {
                             <motion.form key="form" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
                               onSubmit={handlePourHeartText}
                               onClick={(e) => e.stopPropagation()}
-                              className="w-full h-full flex flex-col justify-between p-2"
+                              className="w-full h-full flex flex-col justify-between"
                             >
                               <textarea
                                 value={userText}
                                 onChange={(e) => setUserText(e.target.value)}
                                 onKeyDown={handleKeyDown}
-                                placeholder={lumosActive ? "Type 'nox' to extinguish the light..." : "Write your secrets here..."}
+                                placeholder={lumosActive ? "Type 'nox' to extinguish the light..." : "Write in the diary... (Press Enter to pour ink)"}
                                 disabled={isRiddleWriting}
-                                className="w-full flex-1 bg-transparent text-amber-950 font-parchment text-lg leading-loose placeholder-amber-950/45 border-none resize-none focus:outline-none focus:ring-0 font-medium quill-cursor"
-                                style={{ paddingTop: "4px" }}
+                                className="w-full flex-1 bg-transparent text-amber-950 font-parchment text-[19px] leading-loose placeholder-amber-950/25 border-none resize-none focus:outline-none focus:ring-0 font-medium quill-cursor p-4"
                               />
-                              <div className="flex justify-center mt-1">
-                                <motion.button type="submit" disabled={!userText.trim() || isRiddleWriting}
-                                  whileHover={{ scale: 1.04, boxShadow: "0 4px 20px rgba(0,0,0,0.35)" }}
-                                  whileTap={{ scale: 0.95 }}
-                                  className={`px-7 py-2 rounded-sm font-cinzel text-[10px] font-bold tracking-widest disabled:opacity-25 disabled:cursor-not-allowed cursor-pointer uppercase border shadow-md transition-colors ${lumosActive ? "bg-amber-900/80 text-amber-100 border-amber-600/60 hover:bg-amber-800" : "bg-[#1f160e] text-[#f7eede] hover:bg-[#2d2116] border-amber-950/30"}`}
+                              <div className="flex justify-end p-3 absolute bottom-3 right-3 pointer-events-none">
+                                <motion.button type="submit" disabled={!userText.trim() || isRiddleWriting || isTextFading}
+                                  whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                                  className="pointer-events-auto text-amber-950/90 hover:text-amber-950 border border-amber-900/25 hover:border-amber-900/50 bg-amber-950/5 hover:bg-amber-950/10 px-5 py-2 rounded-md font-cinzel text-[10px] font-bold tracking-[0.2em] disabled:opacity-40 disabled:hover:bg-amber-950/5 disabled:hover:border-amber-900/25 disabled:cursor-not-allowed transition-all duration-500 uppercase cursor-pointer backdrop-blur-[2px]"
                                 >
-                                  {lumosActive ? "Cast Spell" : "Pour Heart"}
+                                  Pour Ink
                                 </motion.button>
                               </div>
                             </motion.form>
@@ -1741,253 +1767,30 @@ export default function Diary({ onOpenChange }: DiaryProps) {
                       </motion.div>
                     )}
                   </AnimatePresence>
-
-                  {/* Quill writing indicator */}
-                  <AnimatePresence>
-                    {isRiddleWriting && !isThinking && (
-                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className="absolute bottom-14 left-4 flex items-center gap-2 pointer-events-none z-30"
-                      >
-                        <motion.span animate={{ rotate: [0, -12, 6, -9, 0] }} transition={{ duration: 0.7, repeat: Infinity, ease: "easeInOut" }} className="text-base">🪶</motion.span>
-                        <div className="flex gap-[3px]">
-                          {[0, 0.18, 0.36].map((d, i) => (
-                            <motion.div key={i} className="w-1 h-1 rounded-full bg-amber-950/45"
-                              animate={{ scale: [1, 1.6, 1], opacity: [0.35, 1, 0.35] }}
-                              transition={{ duration: 0.65, delay: d, repeat: Infinity }}
-                            />
-                          ))}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
                 </div>
-                </div>
-                {/* Bottom page marker */}
-                <div className="text-[9px] text-amber-950/50 font-cinzel tracking-[0.12em] xs:tracking-[0.3em] flex justify-between relative z-10 pt-2 border-t border-amber-950/20">
-                  <span>PAGE LVIII</span>
-                  <span>PROPERTY OF T. M. Riddle</span>
-                </div>
-              </motion.div>
-
+              </div>
+              {/* Bottom page marker */}
+              <div className="text-[9px] text-amber-950/50 font-cinzel tracking-[0.12em] xs:tracking-[0.3em] flex justify-between relative z-10 pt-2 border-t border-amber-950/20">
+                <span>PAGE LVIII</span>
+                <span>PROPERTY OF T. M. Riddle</span>
+              </div>
             </motion.div>
-          )}
-        </AnimatePresence>
 
-      </div>
-
-      {/* ── DESK PROPS ── */}
-      {/* Basilisk Fang — Left Desk Corner */}
-      <div className={`fixed md:absolute bottom-6 left-6 md:bottom-auto md:left-6 lg:left-12 md:top-[68%] md:-translate-y-1/2 z-35 flex flex-col items-center gap-2 select-none`}>
-        <motion.div
-          whileHover={{ scale: 1.05, filter: "brightness(1.1) drop-shadow(0 0 10px rgba(34,197,94,0.3))" }}
-          onClick={() => setActiveProp((prev) => (prev === "fang" ? "none" : "fang"))}
-          className={`p-3 sm:p-4 rounded-2xl transition-all duration-300 cursor-pointer prop-display-frame ${
-            activeProp === "fang" ? "active-prop-glow-fang" : ""
-          }`}
-        >
-          <svg viewBox="0 0 60 180" className="w-8 h-20 sm:w-10 sm:h-24 transition-transform duration-300" style={{ transform: activeProp === "fang" ? "rotate(-10deg) scale(1.05)" : "none" }}>
-            <path d="M10,10 C10,10 15,60 18,100 C21,140 18,160 12,175 C30,150 42,120 40,80 C38,40 28,20 10,10 Z" fill="#fafaf9" stroke="#44403c" strokeWidth="2.5" />
-            <path d="M12,20 C12,20 16,55 18,90 C20,125 18,145 14,160 C26,140 33,115 32,80 C31,45 24,30 12,20 Z" fill="url(#venomGlow)" opacity="0.65" />
-            <defs>
-              <linearGradient id="venomGlow" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#22c55e" stopOpacity="0.9" />
-                <stop offset="100%" stopColor="#15803d" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-          </svg>
-        </motion.div>
-        <span className="font-cinzel text-[8px] sm:text-[9px] text-amber-100/50 tracking-wider uppercase bg-zinc-950/80 px-2 py-0.5 rounded border border-amber-950/15">
-          {activeProp === "fang" ? "Active" : "Basilisk Fang"}
-        </span>
-      </div>
-
-      {/* Marvolo Gaunt's Ring — Right Desk Corner */}
-      <div className={`fixed md:absolute bottom-6 right-6 md:bottom-auto md:right-6 lg:right-12 md:top-[68%] md:-translate-y-1/2 z-35 flex flex-col items-center gap-2 select-none`}>
-        {/* Smoke particles */}
-        {activeProp === "ring" && smokeParticles.map((p) => (
-          <motion.div
-            key={p.id}
-            className="smoke-particle"
-            style={{ left: `calc(50% + ${p.x}px)`, bottom: `80px` }}
-            initial={{ scale: 0.5, opacity: 0.8 }}
-            animate={{ y: -80, x: p.x + (Math.random() - 0.5) * 20, scale: 2.2, opacity: 0 }}
-            transition={{ duration: 1.6, ease: "easeOut" }}
-          />
-        ))}
-        
-        <motion.div
-          drag
-          dragSnapToOrigin
-          whileHover={{ scale: 1.05, rotate: [0, -3, 3, 0], filter: "brightness(1.1)" }}
-          whileDrag={{ scale: 1.25, rotate: 10, filter: "brightness(1.3)" }}
-          onHoverStart={() => {
-            if (ringChimeRef.current) clearTimeout(ringChimeRef.current);
-            ringChimeRef.current = setTimeout(() => audio.playRingChime(), 80);
-          }}
-          onDragStart={() => {
-            setActiveProp("ring");
-            setRingDragging(true);
-            audio.playRingChime();
-            setPageRects({
-              left: leftPageRef.current?.getBoundingClientRect() || { left: 0, top: 0 },
-              right: rightPageRef.current?.getBoundingClientRect() || { left: 0, top: 0 },
-            });
-          }}
-          onDrag={(e, info) => {
-            setRingRevealPos({ x: info.point.x, y: info.point.y });
-          }}
-          onDragEnd={() => {
-            setRingDragging(false);
-            setRingRevealPos(null);
-            setActiveProp("none");
-          }}
-          className={`p-3.5 sm:p-5 rounded-2xl transition-colors duration-300 flex items-center justify-center cursor-grab active:cursor-grabbing prop-display-frame ${
-            activeProp === "ring" ? "active-prop-glow-ring" : ""
-          }`}
-          style={{ zIndex: ringDragging ? 50 : 35 }}
-        >
-          <svg viewBox="0 0 80 80" className="w-7 h-7 sm:w-8 sm:h-8 transition-transform duration-300">
-            <circle cx="40" cy="50" r="22" fill="none" stroke="url(#ringGold)" strokeWidth="6" />
-            <path d="M 28 32 L 52 32 L 40 16 Z" fill="url(#ringGold)" stroke="#78350f" strokeWidth="1" />
-            <polygon points="40,8 54,24 40,40 26,24" fill="#09090b" stroke="#78350f" strokeWidth="1.5" />
-            <g stroke="#f59e0b" strokeWidth="1" fill="none" opacity="0.8">
-              <polygon points="40,14 49,28 31,28" />
-              <circle cx="40" cy="23.5" r="4.5" />
-              <line x1="40" y1="14" x2="40" y2="28" />
-            </g>
-            <defs>
-              <linearGradient id="ringGold" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#fef08a" />
-                <stop offset="50%" stopColor="#d97706" />
-                <stop offset="100%" stopColor="#78350f" />
-              </linearGradient>
-            </defs>
-          </svg>
-        </motion.div>
-        
-        {activeProp === "ring" && (
-          <motion.button
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            onClick={() => {
-              setStoneOnBook((prev) => {
-                const next = !prev;
-                if (next) {
-                  audio.playGhostWhisper();
-                }
-                return next;
-              });
-            }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className={`mt-1.5 px-2.5 py-1 rounded border font-cinzel text-[8px] sm:text-[9px] tracking-wider uppercase transition-all duration-300 ${
-              stoneOnBook
-                ? "bg-blue-950/40 border-blue-400 text-blue-300 shadow-[0_0_10px_rgba(96,165,250,0.3)]"
-                : "bg-zinc-950/80 border-amber-950/20 text-amber-100/55 hover:text-amber-100"
-            }`}
-          >
-            {stoneOnBook ? "Stone: On" : "Pry Stone"}
-          </motion.button>
+          </motion.div>
         )}
-
-        <span className="font-cinzel text-[8px] sm:text-[9px] text-amber-100/50 tracking-wider uppercase bg-zinc-950/80 px-2 py-0.5 rounded border border-amber-950/15 mt-1 text-center leading-tight">
-          {ringDragging ? "Revealing..." : "Drag to Reveal"}
-        </span>
-      </div>
-
-      {/* Sword of Gryffindor Prop - rested at right side of desk */}
-      <div className="fixed md:absolute bottom-6 right-8 md:bottom-auto md:right-1 lg:right-4 md:top-[65%] md:-translate-y-1/2 md:rotate-90 z-35 flex flex-col items-center gap-1 select-none origin-center">
-        <motion.div
-          whileHover={{ scale: 1.02, filter: "brightness(1.15)" }}
-          onClick={() => {
-            setActiveProp((prev) => (prev === "sword" ? "none" : "sword"));
-          }}
-          className={`w-72 sm:w-80 h-14 rounded-xl border flex items-center justify-between px-3 transition-all duration-300 cursor-pointer ${
-            activeProp === "sword"
-              ? "bg-red-950/45 border-red-500/50 shadow-[0_0_25px_rgba(239,68,68,0.4)] ring-1 ring-red-500/20"
-              : "bg-[#18110b]/90 border-amber-950/40 hover:border-amber-700/50 shadow-[0_12px_28px_rgba(0,0,0,0.7)]"
-          }`}
-          style={{
-            backgroundImage: "radial-gradient(circle at center, rgba(127,29,29,0.2) 0%, transparent 80%)"
-          }}
-        >
-          {/* Left peg mount */}
-          <div className="w-1.5 h-6 bg-amber-950/85 border-t border-amber-800 rounded-sm self-end mb-1.5 ml-8" />
-          
-          <svg viewBox="0 0 160 30" className="w-48 h-10 transition-transform duration-300 self-center" style={{ transform: activeProp === "sword" ? "translateY(-1px) rotate(1deg)" : "none" }}>
-            {/* Sword blade */}
-            <path d="M22,15 L130,12 L150,15 L130,18 Z" fill="#e2e8f0" stroke="#94a3b8" strokeWidth="1" />
-            <line x1="22" y1="15" x2="130" y2="15" stroke="#cbd5e1" strokeWidth="0.5" />
-            {/* Rubies on blade */}
-            <circle cx="125" cy="15" r="1" fill="#ef4444" />
-            <circle cx="110" cy="15" r="0.8" fill="#ef4444" />
-            <circle cx="95" cy="15" r="0.8" fill="#ef4444" />
-            {/* Crossguard */}
-            <path d="M18,3 C18,3 22,12 22,15 C22,18 18,27 18,27 L22,27 C22,27 25,18 25,15 C25,12 22,3 22,3 Z" fill="#fbbf24" stroke="#d97706" strokeWidth="0.5" />
-            {/* Rubies on Crossguard */}
-            <circle cx="20.5" cy="8" r="0.8" fill="#ef4444" />
-            <circle cx="20.5" cy="22" r="0.8" fill="#ef4444" />
-            {/* Hilt / Grip with golden wire wrap */}
-            <rect x="5" y="12" width="13" height="6" rx="1" fill="#b91c1c" stroke="#7f1d1d" strokeWidth="0.5" />
-            <line x1="8" y1="12" x2="10" y2="18" stroke="#fbbf24" strokeWidth="0.6" />
-            <line x1="11" y1="12" x2="13" y2="18" stroke="#fbbf24" strokeWidth="0.6" />
-            <line x1="14" y1="12" x2="16" y2="18" stroke="#fbbf24" strokeWidth="0.6" />
-            {/* Pommel with large ruby */}
-            <circle cx="2" cy="15" r="3.5" fill="#fbbf24" stroke="#d97706" strokeWidth="0.5" />
-            <circle cx="2" cy="15" r="1.5" fill="#ef4444" />
-          </svg>
-          
-          {/* Right peg mount */}
-          <div className="w-1.5 h-6 bg-amber-950/85 border-t border-amber-800 rounded-sm self-end mb-1.5 mr-8" />
-
-          {/* Label status */}
-          <div className="absolute top-1 right-2 flex items-center gap-1 font-cinzel text-[7px] text-amber-500/70 uppercase tracking-widest font-bold">
-            {activeProp === "sword" ? "Active" : "Gryffindor Sword"}
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Inkwell Rack prop - Left Side of Desk */}
-      <div className={`fixed md:absolute bottom-6 left-24 md:bottom-auto md:left-6 lg:left-12 md:top-[22%] md:-translate-y-1/2 z-35 flex md:flex-col items-center gap-3 bg-zinc-900/80 border border-amber-950/20 px-3 py-2 md:py-4 rounded-2xl backdrop-blur-md select-none`}>
-        <span className="font-cinzel text-[8px] text-amber-500/80 uppercase tracking-widest md:rotate-270 md:my-4">Inkwell</span>
-        {[
-          { type: "standard", color: "bg-zinc-950 border-zinc-700", name: "Standard" },
-          { type: "invisible", color: "bg-amber-100/30 border-amber-200/50 shadow-[0_0_8px_rgba(253,240,138,0.2)]", name: "Invisible" },
-          { type: "venom", color: "bg-amber-950 border-orange-800 shadow-[0_0_8px_rgba(249,115,22,0.4)]", name: "Venom" },
-          { type: "emerald", color: "bg-emerald-950 border-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]", name: "Emerald" }
-        ].map((ink) => (
-          <motion.button
-            key={ink.type}
-            whileHover={{ scale: 1.15 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => {
-              setActiveInk(ink.type as any);
-              if (ink.type === "invisible") {
-                setLumosActive(true);
-                audio.playLumos();
-              } else {
-                setLumosActive(false);
-              }
-            }}
-            className={`w-6 h-6 rounded-full border-2 cursor-pointer transition-all ${ink.color} ${
-              activeInk === ink.type ? "ring-2 ring-amber-500 scale-110" : "opacity-70 hover:opacity-100"
-            }`}
-            title={`${ink.name} Ink`}
-          />
-        ))}
-      </div>
-
-      {/* Spells & Secrets Scroll Prop — Left Desk Corner (under inkwells) */}
-      <div className="fixed md:absolute bottom-6 left-28 md:bottom-auto md:left-6 lg:left-12 md:top-[85%] md:-translate-y-1/2 z-35 flex flex-col items-center gap-1.5 select-none">
+      </AnimatePresence>
+    </div>
+           {/* ── SPELLS & RULES SCROLL ── */}
+      <div className="fixed top-4 sm:top-6 right-2 sm:right-6 lg:right-10 z-40 flex flex-col items-center gap-1.5 select-none scale-60 sm:scale-80 lg:scale-100 origin-top-right">
         <motion.div
           whileHover={{ scale: 1.08, rotate: [0, -3, 3, 0], filter: "brightness(1.15) drop-shadow(0 0 10px rgba(245,158,11,0.35))" }}
           onClick={() => {
             setShowRulebook(true);
             audio.playScratch(80, true);
           }}
-          className="p-3 sm:p-4 rounded-2xl transition-all duration-300 flex items-center justify-center cursor-pointer prop-display-frame"
+          className="p-2.5 sm:p-3 rounded-xl transition-all duration-300 flex items-center justify-center cursor-pointer bg-zinc-900/40 border border-amber-950/20 backdrop-blur-md shadow-lg"
         >
-          <svg viewBox="0 0 80 80" className="w-8 h-8 sm:w-9 sm:h-9 transition-transform duration-300">
+          <svg viewBox="0 0 80 80" className="w-7 h-7 sm:w-8 sm:h-8 transition-transform duration-300">
             <path d="M20,20 C20,20 30,15 45,15 C60,15 65,22 65,22 L65,58 C65,58 60,50 45,50 C30,50 20,55 20,55 Z" fill="#fef3c7" stroke="#78350f" strokeWidth="2" />
             <path d="M20,20 C10,20 10,25 20,25 C30,25 30,20 20,20" fill="#d97706" stroke="#78350f" strokeWidth="1.5" />
             <path d="M20,55 C10,55 10,60 20,60 C30,60 30,55 20,55" fill="#d97706" stroke="#78350f" strokeWidth="1.5" />
@@ -1996,9 +1799,242 @@ export default function Diary({ onOpenChange }: DiaryProps) {
             <rect x="38" y="15" width="4" height="35" rx="1" fill="#ef4444" stroke="#b91c1c" strokeWidth="0.5" />
           </svg>
         </motion.div>
-        <span className="font-cinzel text-[8px] sm:text-[9px] text-amber-100/50 tracking-wider uppercase bg-zinc-950/80 px-2 py-0.5 rounded border border-amber-950/15">
-          Spells Scroll
+        <span className="font-cinzel font-bold text-[10px] sm:text-[11px] text-[#e8c460]/90 tracking-[0.25em] uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] transition-opacity hover:text-[#e8c460]">
+          Rules
         </span>
+      </div>
+
+      {/* ── MAGICAL TOOLS DOCK ── */}
+      <div className="fixed -left-4 xs:left-0 sm:left-4 lg:left-8 top-1/2 -translate-y-1/2 z-[100] flex flex-col items-center gap-6 bg-zinc-950/60 border border-amber-950/40 py-6 px-3 rounded-full backdrop-blur-md shadow-2xl select-none scale-[0.55] xs:scale-70 sm:scale-90 lg:scale-100 origin-left">
+        
+        <span className="font-cinzel font-bold text-[9px] text-amber-500/80 uppercase tracking-[0.25em] pb-1 border-b border-amber-950/30">Artifacts</span>
+
+        {/* Basilisk Fang */}
+        <div className="flex flex-col items-center gap-1 group relative">
+          <motion.div
+            whileHover={{ scale: 1.1, filter: "brightness(1.1) drop-shadow(0 0 10px rgba(34,197,94,0.3))" }}
+            onClick={() => setActiveProp((prev) => (prev === "fang" ? "none" : "fang"))}
+            className={`cursor-pointer transition-all duration-300 rounded-full p-2 ${activeProp === "fang" ? "bg-green-950/40 ring-1 ring-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.2)]" : "hover:bg-amber-950/20"}`}
+          >
+            <svg viewBox="0 0 100 300" className="w-6 h-16 transition-transform duration-300 drop-shadow-xl" style={{ transform: activeProp === "fang" ? "rotate(-10deg) scale(1.05)" : "none" }}>
+              <defs>
+                <linearGradient id="fangBone" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#e6e1d1" />
+                  <stop offset="50%" stopColor="#fffae6" />
+                  <stop offset="100%" stopColor="#b3ac96" />
+                </linearGradient>
+                <linearGradient id="venomDrip" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#10b981" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#047857" stopOpacity="1" />
+                </linearGradient>
+                <filter id="venomGlow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+              </defs>
+              {/* Base Fang */}
+              <path d="M 35,10 C 65,15 75,50 70,100 C 65,150 50,220 40,280 C 40,290 35,295 30,295 C 25,295 20,290 18,280 C 15,240 10,180 15,100 C 18,50 20,15 35,10 Z" fill="url(#fangBone)" stroke="#78716c" strokeWidth="1" />
+              {/* Ridges and details */}
+              <path d="M 35,10 C 45,50 50,150 35,250" fill="none" stroke="#d6d3d1" strokeWidth="2" strokeDasharray="5,15" opacity="0.6" />
+              <path d="M 25,20 C 30,80 35,160 25,260" fill="none" stroke="#78716c" strokeWidth="1.5" opacity="0.4" />
+              <path d="M 50,30 C 55,100 50,180 40,240" fill="none" stroke="#a8a29e" strokeWidth="1.5" opacity="0.5" />
+              {/* Venom Base */}
+              <path d="M 35,180 C 45,210 40,260 30,295 C 20,260 25,210 35,180 Z" fill="url(#venomDrip)" filter="url(#venomGlow)" opacity="0.9" />
+              {/* Venom Drips */}
+              <circle cx="28" cy="285" r="4" fill="#10b981" filter="url(#venomGlow)" />
+              <path d="M 28,285 L 28,300 C 28,303 32,303 32,300 L 32,285 Z" fill="#047857" />
+              <circle cx="35" cy="270" r="3" fill="#34d399" filter="url(#venomGlow)" />
+            </svg>
+          </motion.div>
+          <div className="absolute left-full ml-4 top-1/2 -translate-y-1/2 font-cinzel font-bold text-[11px] text-[#e8c460]/90 tracking-widest uppercase opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap drop-shadow-md transition-opacity">
+            {activeProp === "fang" ? "Armed" : "Basilisk Fang"}
+          </div>
+        </div>
+
+        {/* Gryffindor Sword */}
+        <div className="flex flex-col items-center gap-1 group relative">
+          <motion.div
+            whileHover={{ scale: 1.05, filter: "brightness(1.15)" }}
+            onClick={() => setActiveProp((prev) => (prev === "sword" ? "none" : "sword"))}
+            className={`w-10 h-32 flex items-center justify-center cursor-pointer rounded-full transition-all duration-300 ${activeProp === "sword" ? "bg-red-950/30 ring-1 ring-red-500/30 shadow-[0_0_20px_rgba(239,68,68,0.2)]" : "hover:bg-amber-950/20"}`}
+          >
+            <svg viewBox="0 0 60 220" className="w-8 h-28 transition-transform duration-300 self-center drop-shadow-2xl" style={{ transform: activeProp === "sword" ? "rotate(2deg) scale(1.05)" : "none" }}>
+              <defs>
+                <linearGradient id="blade" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#e2e8f0" />
+                  <stop offset="30%" stopColor="#f8fafc" />
+                  <stop offset="50%" stopColor="#94a3b8" />
+                  <stop offset="70%" stopColor="#f1f5f9" />
+                  <stop offset="100%" stopColor="#cbd5e1" />
+                </linearGradient>
+                <linearGradient id="hiltGold" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#fef08a" />
+                  <stop offset="50%" stopColor="#d97706" />
+                  <stop offset="100%" stopColor="#78350f" />
+                </linearGradient>
+                <filter id="rubyGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="1.5" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+              </defs>
+              {/* Blade */}
+              <path d="M 27,60 L 33,60 L 33,190 L 30,215 L 27,190 Z" fill="url(#blade)" stroke="#64748b" strokeWidth="0.5" />
+              {/* Blade fuller (middle groove) */}
+              <line x1="30" y1="65" x2="30" y2="180" stroke="#475569" strokeWidth="1" opacity="0.6" />
+              {/* Crossguard */}
+              <path d="M 10,60 C 15,55 45,55 50,60 C 55,65 5,65 10,60 Z" fill="url(#hiltGold)" stroke="#78350f" strokeWidth="1" />
+              <path d="M 5,60 C 0,55 0,50 5,45 C 10,50 10,55 5,60 Z" fill="url(#hiltGold)" stroke="#78350f" strokeWidth="0.5" />
+              <path d="M 55,60 C 60,55 60,50 55,45 C 50,50 50,55 55,60 Z" fill="url(#hiltGold)" stroke="#78350f" strokeWidth="0.5" />
+              {/* Handle */}
+              <rect x="25" y="25" width="10" height="35" rx="2" fill="#450a0a" stroke="#78350f" strokeWidth="1" />
+              {/* Handle wrap lines */}
+              {[...Array(6)].map((_, i) => (
+                <line key={i} x1="25" y1={30 + i * 5} x2="35" y2={33 + i * 5} stroke="#d97706" strokeWidth="1" opacity="0.8" />
+              ))}
+              {/* Pommel */}
+              <circle cx="30" cy="18" r="8" fill="url(#hiltGold)" stroke="#78350f" strokeWidth="1" />
+              {/* Rubies */}
+              <circle cx="30" cy="18" r="4" fill="#dc2626" filter="url(#rubyGlow)" />
+              <circle cx="30" cy="58" r="3" fill="#dc2626" filter="url(#rubyGlow)" />
+              <circle cx="15" cy="58" r="2" fill="#dc2626" filter="url(#rubyGlow)" />
+              <circle cx="45" cy="58" r="2" fill="#dc2626" filter="url(#rubyGlow)" />
+            </svg>
+          </motion.div>
+          <div className="absolute left-full ml-4 top-1/2 -translate-y-1/2 font-cinzel font-bold text-[11px] text-[#e8c460]/90 tracking-widest uppercase opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap drop-shadow-md transition-opacity">
+            {activeProp === "sword" ? "Armed" : "Sword"}
+          </div>
+        </div>
+
+        {/* Gaunt's Ring */}
+        <div className="flex flex-col items-center gap-1 group relative">
+          {activeProp === "ring" && smokeParticles.map((p) => (
+            <motion.div
+              key={p.id}
+              className="smoke-particle"
+              style={{ left: `calc(50% + ${p.x}px)`, bottom: `30px` }}
+              initial={{ scale: 0.5, opacity: 0.8 }}
+              animate={{ y: -60, x: p.x + (Math.random() - 0.5) * 15, scale: 2, opacity: 0 }}
+              transition={{ duration: 1.6, ease: "easeOut" }}
+            />
+          ))}
+          <motion.div
+            drag
+            dragSnapToOrigin
+            whileHover={{ scale: 1.15, rotate: [0, -3, 3, 0], filter: "brightness(1.1)" }}
+            whileDrag={{ scale: 1.25, rotate: 10, filter: "brightness(1.3)" }}
+            onHoverStart={() => {
+              if (ringChimeRef.current) clearTimeout(ringChimeRef.current);
+              ringChimeRef.current = setTimeout(() => audio.playRingChime(), 80);
+            }}
+            onDragStart={() => {
+              setActiveProp("ring");
+              setRingDragging(true);
+              audio.playRingChime();
+              setPageRects({
+                left: leftPageRef.current?.getBoundingClientRect() || { left: 0, top: 0 },
+                right: rightPageRef.current?.getBoundingClientRect() || { left: 0, top: 0 },
+              });
+            }}
+            onDrag={(e, info) => {
+              setRingRevealPos({ x: info.point.x, y: info.point.y });
+            }}
+            onDragEnd={() => {
+              setRingDragging(false);
+              setRingRevealPos(null);
+              setActiveProp("none");
+            }}
+            className={`p-2 rounded-full transition-colors duration-300 flex items-center justify-center cursor-grab active:cursor-grabbing ${
+              activeProp === "ring" ? "bg-amber-950/50 ring-1 ring-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.2)]" : "hover:bg-amber-950/20"
+            }`}
+            style={{ zIndex: ringDragging ? 50 : 35 }}
+          >
+            <svg viewBox="0 0 100 100" className="w-10 h-10 transition-transform duration-300 drop-shadow-2xl">
+              <defs>
+                <linearGradient id="ringGold" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#fef08a" />
+                  <stop offset="25%" stopColor="#d97706" />
+                  <stop offset="50%" stopColor="#fbbf24" />
+                  <stop offset="75%" stopColor="#92400e" />
+                  <stop offset="100%" stopColor="#fef08a" />
+                </linearGradient>
+                <linearGradient id="stoneGlow" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#3f3f46" />
+                  <stop offset="50%" stopColor="#09090b" />
+                  <stop offset="100%" stopColor="#18181b" />
+                </linearGradient>
+                <filter id="stoneShadow">
+                  <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#000" floodOpacity="0.8" />
+                </filter>
+              </defs>
+              {/* Outer band */}
+              <path d="M 25,50 C 25,20 75,20 75,50 C 75,80 25,80 25,50 Z" fill="none" stroke="url(#ringGold)" strokeWidth="12" />
+              {/* Inner band shadow */}
+              <path d="M 31,50 C 31,28 69,28 69,50 C 69,72 31,72 31,50 Z" fill="none" stroke="#451a03" strokeWidth="2" opacity="0.6" />
+              {/* Stone Setting */}
+              <path d="M 35,28 L 65,28 L 55,40 L 45,40 Z" fill="url(#ringGold)" stroke="#78350f" strokeWidth="1" />
+              {/* Resurrection Stone (Diamond/Hexagon shape) */}
+              <polygon points="50,15 68,32 50,48 32,32" fill="url(#stoneGlow)" stroke="#52525b" strokeWidth="1" filter="url(#stoneShadow)" />
+              {/* Stone facets */}
+              <polygon points="50,22 60,32 50,40 40,32" fill="#27272a" opacity="0.8" />
+              <line x1="50" y1="15" x2="50" y2="22" stroke="#52525b" strokeWidth="0.5" />
+              <line x1="50" y1="48" x2="50" y2="40" stroke="#52525b" strokeWidth="0.5" />
+              <line x1="32" y1="32" x2="40" y2="32" stroke="#52525b" strokeWidth="0.5" />
+              <line x1="68" y1="32" x2="60" y2="32" stroke="#52525b" strokeWidth="0.5" />
+              {/* Deathly Hallows Symbol (faint gold) */}
+              <g stroke="#d97706" strokeWidth="0.8" fill="none" opacity="0.6">
+                <polygon points="50,25 58,38 42,38" />
+                <circle cx="50" cy="33.5" r="4.5" />
+                <line x1="50" y1="25" x2="50" y2="38" />
+              </g>
+            </svg>
+          </motion.div>
+          <div className="absolute left-full ml-4 top-1/2 -translate-y-1/2 font-cinzel font-bold text-[11px] text-[#e8c460]/90 tracking-widest uppercase opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap drop-shadow-md transition-opacity">
+            {ringDragging ? "Revealing..." : activeProp === "ring" ? "Drag on Page" : "Gaunt's Ring"}
+          </div>
+        </div>
+
+        {/* Inkwells (Only when open) */}
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="flex flex-col items-center gap-4 pt-2 overflow-hidden w-full"
+            >
+              <div className="w-6 h-px bg-amber-950/50" />
+              <span className="font-cinzel font-bold text-[9px] text-amber-500/80 uppercase tracking-[0.25em]">Inks</span>
+              {[
+                { type: "standard", color: "bg-zinc-950 border-zinc-700", name: "Standard" },
+                { type: "invisible", color: "bg-amber-100/30 border-amber-200/50", name: "Invisible" },
+                { type: "venom", color: "bg-amber-950 border-orange-800", name: "Venom" },
+                { type: "emerald", color: "bg-emerald-950 border-emerald-500", name: "Emerald" }
+              ].map((ink) => (
+                <div key={ink.type} className="group relative flex items-center">
+                  <motion.button
+                    whileHover={{ scale: 1.15 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => {
+                      setActiveInk(ink.type as any);
+                      if (ink.type === "invisible") {
+                        setLumosActive(true);
+                        audio.playLumos();
+                      } else {
+                        setLumosActive(false);
+                      }
+                    }}
+                    className={`w-5 h-5 rounded-full border-2 cursor-pointer transition-all ${ink.color} ${
+                      activeInk === ink.type ? "ring-2 ring-amber-500 scale-110 shadow-[0_0_8px_rgba(245,158,11,0.5)]" : "opacity-70 hover:opacity-100"
+                    }`}
+                  />
+                  <div className="absolute left-full ml-4 font-cinzel font-bold text-[11px] text-[#e8c460]/90 tracking-widest uppercase opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap drop-shadow-md transition-opacity">
+                    {ink.name}
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Magical Instructions Scroll Overlay */}
@@ -2010,7 +2046,7 @@ export default function Diary({ onOpenChange }: DiaryProps) {
               animate={{ scale: 1, opacity: 1, rotate: 0 }}
               exit={{ scale: 0.9, opacity: 0, rotate: 2 }}
               transition={{ type: "spring", duration: 0.5 }}
-              className="scroll-modal-container w-full max-w-lg p-6 sm:p-8 rounded-xl max-h-[85vh] overflow-y-auto flex flex-col gap-5 text-amber-950 font-sans"
+              className="scroll-modal-container w-full max-w-[95%] sm:max-w-lg p-4 sm:p-8 rounded-xl max-h-[85vh] overflow-y-auto flex flex-col gap-4 sm:gap-5 text-amber-950 font-sans"
             >
               <div className="flex justify-between items-center border-b-2 border-amber-900/35 pb-3">
                 <h2 className="font-cinzel font-bold text-base sm:text-lg tracking-wider text-amber-900">
@@ -2027,10 +2063,14 @@ export default function Diary({ onOpenChange }: DiaryProps) {
                 </button>
               </div>
 
-              <div className="flex flex-col gap-4 text-xs sm:text-sm leading-relaxed overflow-y-auto pr-1">
+              <div className="flex flex-col gap-5 text-sm sm:text-base leading-relaxed overflow-y-auto pr-1 text-amber-950 font-medium pb-4">
                 <div>
-                  <h3 className="font-cinzel font-bold text-amber-900 mb-1 border-b border-amber-900/15 pb-0.5">✒️ Pouring Heart</h3>
-                  <p>Type in the text input area and press <strong>&quot;Pour Heart&quot;</strong>, or draw freehand lines with your stylus or mouse directly on the page.</p>
+                  <h3 className="font-cinzel font-bold text-amber-900 mb-1 border-b border-amber-900/15 pb-0.5">✒️ Pouring Ink</h3>
+                  <p>Choose your tool at the top of the diary:</p>
+                  <ul className="list-disc pl-5 flex flex-col gap-1 mt-1">
+                    <li><strong>Quill Mode:</strong> Type in the text input area and press &quot;Pour Ink&quot; to write to Tom.</li>
+                    <li><strong>Inkwell Mode:</strong> Draw freehand lines directly on the page with your mouse or stylus.</li>
+                  </ul>
                 </div>
 
                 <div>
@@ -2082,12 +2122,12 @@ export default function Diary({ onOpenChange }: DiaryProps) {
           <div className="pensieve-scratch" style={{ animationDelay: "0.5s" }} />
           <div className="pensieve-scratch" style={{ animationDelay: "1.8s" }} />
           
-          <div className="w-full max-w-lg bg-slate-950/80 border border-slate-700/40 p-8 rounded-3xl backdrop-blur-lg shadow-2xl relative z-110 flex flex-col gap-6">
-            <h2 className="font-cinzel text-slate-200 text-lg tracking-[0.2em] font-bold uppercase pb-3 border-b border-slate-800">
+          <div className="w-full max-w-[95%] sm:max-w-lg bg-slate-950/80 border border-slate-700/40 p-5 sm:p-8 rounded-2xl sm:rounded-3xl backdrop-blur-lg shadow-2xl relative z-110 flex flex-col gap-4 sm:gap-6">
+            <h2 className="font-cinzel text-slate-200 text-base sm:text-lg tracking-[0.1em] sm:tracking-[0.2em] font-bold uppercase pb-3 border-b border-slate-800">
               Memory of Tom Riddle — 1943
             </h2>
             
-            <p className="font-parchment text-slate-300 text-base sm:text-lg leading-relaxed text-left min-h-[120px]">
+            <p className="font-parchment text-slate-300 text-[15px] sm:text-lg leading-relaxed text-left min-h-[100px] sm:min-h-[120px]">
               {PENSIEVE_SCENES[pensieveStep].text}
             </p>
             
@@ -2162,5 +2202,6 @@ export default function Diary({ onOpenChange }: DiaryProps) {
       )}
 
     </div>
+    </>
   );
 }
