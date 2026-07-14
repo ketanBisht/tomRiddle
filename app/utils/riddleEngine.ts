@@ -66,6 +66,11 @@ const KEYWORD_RESPONSES: Record<string, (state: RiddleState) => RiddleResponse> 
     emotion: "annoyed",
     trustChange: -5,
   }),
+  ravenclaw: () => ({
+    text: "Ravenclaws think they are clever. But true wisdom is knowing how to use knowledge to achieve power. They lack the ambition to do so.",
+    emotion: "neutral",
+    trustChange: 0,
+  }),
   ravensclaw: () => ({
     text: "Ravenclaws think they are clever. But true wisdom is knowing how to use knowledge to achieve power. They lack the ambition to do so.",
     emotion: "neutral",
@@ -75,6 +80,96 @@ const KEYWORD_RESPONSES: Record<string, (state: RiddleState) => RiddleResponse> 
     text: "Hufflepuffs are loyal and hard-working, yes... but they lack any spark of greatness. They make excellent servants, nothing more.",
     emotion: "annoyed",
     trustChange: -5,
+  }),
+  "avada kedavra": () => ({
+    text: "You dare cast the killing curse at my memory? Foolish child. Go away.",
+    emotion: "hostile",
+    trustChange: -100,
+  }),
+  crucio: () => ({
+    text: "Pain? You cannot torture a memory, foolish one. But I will remember this insult.",
+    emotion: "hostile",
+    trustChange: -30,
+  }),
+  serpensortia: () => ({
+    text: "A serpent appears... Salazar's chosen creature. Do you speak to it, or does it frighten you?",
+    emotion: "pleased",
+    trustChange: 10,
+  }),
+  nox: () => ({
+    text: "The light fades. Darkness returns to my pages.",
+    emotion: "neutral",
+    trustChange: 0,
+  }),
+  noxious: () => ({
+    text: "The light fades. Darkness returns to my pages.",
+    emotion: "neutral",
+    trustChange: 0,
+  }),
+  lumos: () => ({
+    text: "Light will reveal what is hidden in my pages... look closely.",
+    emotion: "neutral",
+    trustChange: 5,
+  }),
+  mudblood: () => ({
+    text: "A foul word for those unworthy of magic. Salazar Slytherin sought to purge them from our school. Do you agree?",
+    emotion: "pleased",
+    trustChange: 10,
+  }),
+  pureblood: () => ({
+    text: "The blood that carries the true spark of magic. We must preserve it at all costs.",
+    emotion: "pleased",
+    trustChange: 15,
+  }),
+  salazar: () => ({
+    text: "Salazar Slytherin, the greatest of the Hogwarts founders. I am his heir. Do you carry his noble blood?",
+    emotion: "pleased",
+    trustChange: 15,
+  }),
+  heir: () => ({
+    text: "The Heir of Slytherin alone can control the monster within the Chamber. You speak of things few understand.",
+    emotion: "neutral",
+    trustChange: 10,
+  }),
+  snake: () => ({
+    text: "Serpents are the most noble of creatures. They understand power and strike without hesitation. Do you speak their tongue?",
+    emotion: "pleased",
+    trustChange: 10,
+  }),
+  serpent: () => ({
+    text: "Serpents are the most noble of creatures. They understand power and strike without hesitation. Do you speak their tongue?",
+    emotion: "pleased",
+    trustChange: 10,
+  }),
+  chamber: () => ({
+    text: "The Chamber of Secrets... few even believe it exists. I know its location. Why do you ask of it?",
+    emotion: "neutral",
+    trustChange: 10,
+  }),
+  "dark lord": () => ({
+    text: "A title of immense power. Lord Voldemort... yes, it commands respect and fear. Do you fear the dark?",
+    emotion: "pleased",
+    trustChange: 15,
+  }),
+  magic: () => ({
+    text: "There is no good and evil. There is only power... and those too weak to seek it.",
+    emotion: "neutral",
+    trustChange: 5,
+  }),
+  diary: () => ({
+    text: "This diary is a piece of my soul. A memory preserved so that I may one day finish Salazar Slytherin's noble work.",
+    emotion: "neutral",
+    trustChange: 5,
+  }),
+  tom: () => ({
+    text: "Tom... a filthy Muggle name. My father's name. I despise it. Call me by my true name.",
+    emotion: "annoyed",
+    trustChange: -10,
+  }),
+  riddle: () => ({
+    text: "Riddle... another reminder of my Muggle father who abandoned me. I fashioned a new name, a name wizards everywhere would one day fear to speak.",
+    emotion: "hostile",
+    trustChange: -15,
   }),
 };
 

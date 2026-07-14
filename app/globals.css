@@ -333,3 +333,381 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(90, 50, 15, 0.35);
 }
+
+/* ========================
+   MAGICAL PROPS & EFFECTS
+   ======================== */
+
+/* Basilisk Fang cursor */
+.fang-cursor {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M10 2C10 2 9 8 7 14c-1.5 4.5-3 8-3 11 0 3.5 2.5 5 5 5s5-1.5 5-5c0-3-1.5-6.5-3-11C9 8 8 2 8 2z' fill='%23fef3c7' stroke='%23451a03' stroke-width='1.5'/%3E%3Cpath d='M7 14c0.5-2 1-5 1-5s0.5 3 1 5c1 3.5 2 6 2 8 0 2-1 3-3 3s-3-1-3-3c0-2 1-4.5 2-8z' fill='%2316a34a' opacity='0.5'/%3E%3C/svg%3E") 8 30, auto !important;
+}
+.fang-cursor * {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M10 2C10 2 9 8 7 14c-1.5 4.5-3 8-3 11 0 3.5 2.5 5 5 5s5-1.5 5-5c0-3-1.5-6.5-3-11C9 8 8 2 8 2z' fill='%23fef3c7' stroke='%23451a03' stroke-width='1.5'/%3E%3Cpath d='M7 14c0.5-2 1-5 1-5s0.5 3 1 5c1 3.5 2 6 2 8 0 2-1 3-3 3s-3-1-3-3c0-2 1-4.5 2-8z' fill='%2316a34a' opacity='0.5'/%3E%3C/svg%3E") 8 30, auto !important;
+}
+
+/* Horcrux Ring Pulse */
+@keyframes ringPulse {
+  0% { box-shadow: 0 0 8px rgba(16, 185, 129, 0.2); filter: drop-shadow(0 0 3px rgba(16, 185, 129, 0.3)); }
+  50% { box-shadow: 0 0 25px rgba(16, 185, 129, 0.6); filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.8)); }
+  100% { box-shadow: 0 0 8px rgba(16, 185, 129, 0.2); filter: drop-shadow(0 0 3px rgba(16, 185, 129, 0.3)); }
+}
+.ring-active-glow {
+  animation: ringPulse 2s infinite ease-in-out;
+}
+
+/* Smoke Particles */
+.smoke-particle {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: radial-gradient(circle, rgba(10, 20, 12, 0.7) 0%, rgba(10, 30, 15, 0.3) 40%, rgba(0, 0, 0, 0) 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  mix-blend-mode: color-dodge;
+  filter: blur(2px);
+  z-index: 30;
+}
+
+/* Runic Text margins */
+.runic-text {
+  font-family: var(--font-riddle);
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  user-select: none;
+  pointer-events: none;
+  color: rgba(22, 101, 52, 0.55);
+  text-shadow: 0 0 10px rgba(34, 197, 94, 0.75);
+  animation: runicFlicker 4s infinite alternate ease-in-out;
+}
+
+@keyframes runicFlicker {
+  0%, 100% { opacity: 0.1; transform: scale(0.9) translateY(0px); filter: blur(0.5px); }
+  50% { opacity: 0.8; transform: scale(1.1) translateY(-6px); filter: blur(0px); }
+}
+
+/* Screaming Avada Flash Overlay */
+.screaming-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(16, 185, 129, 0.96);
+  z-index: 1000;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  animation: screamFlash 1.6s forwards ease-out;
+}
+
+@keyframes screamFlash {
+  0% { opacity: 1; filter: brightness(2) contrast(1.8); }
+  15% { opacity: 0.95; filter: hue-rotate(10deg) contrast(1.4); }
+  100% { opacity: 0; }
+}
+
+/* ========================
+   PENSIEVE MODE FILMS & DUST
+   ======================== */
+.pensieve-container {
+  background-color: #05080e !important;
+  background-image: radial-gradient(circle at 50% 50%, #111827 0%, #020408 100%) !important;
+  filter: sepia(0.85) contrast(1.1) brightness(0.85);
+  transition: all 1.2s ease-in-out;
+}
+
+.pensieve-film-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.98' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.09'/%3E%3C/svg%3E");
+  z-index: 100;
+  animation: grainJiggle 0.16s infinite steps(2);
+}
+
+@keyframes grainJiggle {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-1.5px, 1.5px) rotate(180deg); }
+}
+
+.pensieve-scratch {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+  z-index: 101;
+  animation: scratchMove 2.5s infinite linear;
+}
+
+@keyframes scratchMove {
+  0% { left: 8%; opacity: 0; }
+  8% { opacity: 0.45; }
+  12% { opacity: 0; }
+  35% { left: 74%; opacity: 0; }
+  39% { opacity: 0.35; }
+  43% { opacity: 0; }
+  100% { left: 92%; opacity: 0; }
+}
+
+/* ========================
+   BURNT VENOM INK EFFECT
+   ======================== */
+.venom-ink-text {
+  color: #2b1f13 !important;
+  text-shadow: 0 0 1.5px #050505, 0 0 4px #dc2626, 0 0 8px #7f1d1d;
+  filter: blur(0.2px);
+  animation: sizzleText 0.35s infinite alternate ease-in-out;
+}
+
+@keyframes sizzleText {
+  0% { filter: blur(0.2px) brightness(1); transform: rotate(0deg); }
+  100% { filter: blur(0.45px) brightness(1.2) skewX(0.6deg); transform: rotate(0.1deg); }
+}
+
+/* ========================
+   EMERALD GLOW INK EFFECT
+   ======================== */
+.emerald-ink-text {
+  color: #064e3b !important;
+  text-shadow: 0 0 2px #059669, 0 0 6px #10b981, 0 0 12px #34d399;
+  filter: drop-shadow(0 0 2.5px rgba(16, 185, 129, 0.65));
+}
+
+.emerald-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background-color: #34d399;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 25;
+  box-shadow: 0 0 6px #10b981, 0 0 12px #34d399;
+}
+
+/* ========================
+   INVISIBLE INK & LUMOS REVEAL
+   ======================== */
+.invisible-ink-hidden {
+  opacity: 0 !important;
+  mask-image: radial-gradient(circle 0px at 0px 0px, black 100%, transparent 100%);
+  -webkit-mask-image: radial-gradient(circle 0px at 0px 0px, black 100%, transparent 100%);
+  transition: opacity 0.3s ease;
+}
+
+.parchment:hover .invisible-ink-hidden {
+  mask-image: radial-gradient(circle 90px at var(--mouse-x) var(--mouse-y), black 80%, transparent 100%) !important;
+  -webkit-mask-image: radial-gradient(circle 90px at var(--mouse-x) var(--mouse-y), black 80%, transparent 100%) !important;
+  opacity: 0.95 !important;
+}
+
+.invisible-ink-revealed {
+  opacity: 0.85 !important;
+  color: #2e261e !important;
+  text-shadow: 0 0 2px rgba(217, 119, 6, 0.4);
+  transition: opacity 0.2s ease;
+}
+
+.lumos-active-cursor {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='6' fill='%23fef08a' opacity='0.7'/%3E%3Ccircle cx='16' cy='16' r='14' fill='none' stroke='%23fef08a' stroke-dasharray='3 3' stroke-width='1' opacity='0.4'/%3E%3C/svg%3E") 16 16, auto !important;
+}
+
+/* ========================
+   GRYFFINDOR SWORD SLASH EFFECTS
+   ======================== */
+.sword-cursor {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M2 30 L30 2 M18 10 L22 14 M6 22 L10 26' stroke='%23dc2626' stroke-width='2' fill='none'/%3E%3Ccircle cx='28' cy='4' r='2' fill='%23f59e0b'/%3E%3C/svg%3E") 2 30, auto !important;
+}
+.sword-cursor * {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M2 30 L30 2 M18 10 L22 14 M6 22 L10 26' stroke='%23dc2626' stroke-width='2' fill='none'/%3E%3Ccircle cx='28' cy='4' r='2' fill='%23f59e0b'/%3E%3C/svg%3E") 2 30, auto !important;
+}
+
+.book-slashed-left {
+  animation: slashLeft 1.4s forwards cubic-bezier(0.36, 0.07, 0.19, 0.97);
+  transform-origin: bottom left;
+  pointer-events: none !important;
+}
+
+.book-slashed-right {
+  animation: slashRight 1.4s forwards cubic-bezier(0.36, 0.07, 0.19, 0.97);
+  transform-origin: top right;
+  pointer-events: none !important;
+}
+
+@keyframes slashLeft {
+  0% { transform: rotate(0deg) translate(0, 0); }
+  25% { transform: rotate(-2deg) translate(-5px, 8px); }
+  100% { transform: rotate(-12deg) translate(-220px, 450px); opacity: 0; filter: blur(8px); }
+}
+
+@keyframes slashRight {
+  0% { transform: rotate(0deg) translate(0, 0); }
+  25% { transform: rotate(2deg) translate(5px, -8px); }
+  100% { transform: rotate(12deg) translate(220px, -450px); opacity: 0; filter: blur(8px); }
+}
+
+.sword-slash-line {
+  position: absolute;
+  top: -50%;
+  left: 50%;
+  width: 5px;
+  height: 200%;
+  background: linear-gradient(to bottom, transparent, #ffffff, #f43f5e, transparent);
+  transform: rotate(35deg) translateX(-50%);
+  z-index: 500;
+  box-shadow: 0 0 25px #f43f5e, 0 0 50px #ffffff;
+  animation: slashSlash 0.45s forwards ease-out;
+  pointer-events: none;
+}
+
+@keyframes slashSlash {
+  0% { opacity: 0; scale: 0.1; }
+  35% { opacity: 1; scale: 1; }
+  100% { opacity: 0; scale: 1.25; }
+}
+
+/* ========================
+   GHOST SHIMMER (RESURRECTION STONE)
+   ======================== */
+.ghost-shimmer-text {
+  color: rgba(219, 234, 254, 0.85) !important;
+  text-shadow: 0 0 8px rgba(147, 197, 253, 0.9), 0 0 20px rgba(191, 219, 254, 0.5);
+  animation: ghostWhisperAnimation 4.5s infinite alternate ease-in-out;
+}
+
+@keyframes ghostWhisperAnimation {
+  0%, 100% {
+    color: rgba(219, 234, 254, 0.5);
+    text-shadow: 0 0 5px rgba(191, 219, 254, 0.4);
+    transform: skewY(0deg) translateY(0);
+  }
+  50% {
+    color: rgba(219, 234, 254, 0.95);
+    text-shadow: 0 0 18px rgba(219, 234, 254, 0.9), 0 0 35px rgba(147, 197, 253, 0.5);
+    transform: skewY(0.5deg) translateY(-3px);
+  }
+}
+
+/* ========================
+   LUMOS DARKNESS OVERLAY
+   Full-screen darkness with cursor spotlight
+   ======================== */
+.lumos-darkness-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9990;
+  pointer-events: none;
+  transition: background 0.05s linear;
+  mix-blend-mode: normal;
+}
+
+.lumos-hint {
+  position: fixed;
+  transform: translateX(-50%);
+  font-family: var(--font-cinzel), serif;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(254, 240, 138, 0.55);
+  pointer-events: none;
+  white-space: nowrap;
+  animation: lumosHintPulse 2s infinite ease-in-out;
+}
+
+@keyframes lumosHintPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.85; }
+}
+
+/* ========================
+   PREMIUM GLASS DISPLAY FRAMES
+   ======================== */
+.prop-display-frame {
+  background: rgba(15, 10, 5, 0.78) !important;
+  border: 1.5px solid rgba(201, 168, 76, 0.22) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), inset 0 0 15px rgba(201, 168, 76, 0.06) !important;
+  backdrop-filter: blur(12px);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.prop-display-frame:hover {
+  border-color: rgba(201, 168, 76, 0.6) !important;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.85), 0 0 16px rgba(201, 168, 76, 0.18), inset 0 0 20px rgba(201, 168, 76, 0.12) !important;
+}
+
+.active-prop-glow-fang {
+  box-shadow: 0 0 25px rgba(34, 197, 94, 0.38), inset 0 0 15px rgba(34, 197, 94, 0.12) !important;
+  border-color: rgba(34, 197, 94, 0.7) !important;
+}
+
+.active-prop-glow-ring {
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.38), inset 0 0 15px rgba(16, 185, 129, 0.12) !important;
+  border-color: rgba(16, 185, 129, 0.7) !important;
+}
+
+.active-prop-glow-sword {
+  box-shadow: 0 0 25px rgba(239, 68, 68, 0.4), inset 0 0 15px rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.75) !important;
+}
+
+/* ========================
+   VINTAGE INSTRUCTION SCROLL
+   ======================== */
+.scroll-modal-container {
+  background-color: #f6ecdb !important;
+  background-image:
+    radial-gradient(ellipse at 50% 50%, rgba(255, 255, 255, 0.28) 0%, rgba(95, 52, 16, 0.18) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='1'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  box-shadow: 0 35px 85px rgba(0,0,0,0.92), inset 0 0 45px rgba(95,52,16,0.22) !important;
+  border: 7px double #854d0e !important;
+}
+
+/* ========================
+   CRUCIO TORTURE EFFECTS
+   ======================== */
+.crucio-shake {
+  animation: crucioShake 0.9s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes crucioShake {
+  0%, 100% { transform: translateX(0) translateY(0) rotate(0deg); }
+  10% { transform: translateX(-6px) translateY(3px) rotate(-1deg); }
+  20% { transform: translateX(6px) translateY(-3px) rotate(1deg); }
+  30% { transform: translateX(-8px) translateY(2px) rotate(-0.8deg); }
+  40% { transform: translateX(8px) translateY(-2px) rotate(0.8deg); }
+  50% { transform: translateX(-5px) translateY(4px) rotate(-1.2deg); }
+  60% { transform: translateX(5px) translateY(-4px) rotate(1.2deg); }
+  70% { transform: translateX(-4px) translateY(2px) rotate(-0.5deg); }
+  80% { transform: translateX(4px) translateY(-2px) rotate(0.5deg); }
+  90% { transform: translateX(-2px) translateY(1px) rotate(-0.3deg); }
+}
+
+.crucio-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(220, 38, 38, 0.22) 0%, rgba(185, 28, 28, 0.45) 60%, rgba(127, 17, 17, 0.6) 100%);
+  animation: crucioFlicker 0.9s ease-out forwards;
+}
+
+@keyframes crucioFlicker {
+  0% { opacity: 0; }
+  8% { opacity: 1; }
+  20% { opacity: 0.7; }
+  35% { opacity: 1; }
+  50% { opacity: 0.5; }
+  70% { opacity: 0.85; }
+  100% { opacity: 0; }
+}
+
+/* ========================
+   GAUNT'S RING REVEAL
+   Secret text revealed only inside the ring's spotlight
+   ======================== */
+
+
+/* Ring reveal custom cursor */
+.ring-reveal-cursor,
+.ring-reveal-cursor * {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44'%3E%3Ccircle cx='22' cy='30' r='11' fill='none' stroke='%23fbbf24' stroke-width='2.5'/%3E%3Cpolygon points='22,6 30,18 14,18' fill='%23fbbf24' opacity='0.8'/%3E%3Ccircle cx='22' cy='13.5' r='3.5' fill='%23fbbf24' opacity='0.6'/%3E%3Ccircle cx='22' cy='30' r='4' fill='%23fde68a' opacity='0.4'/%3E%3C/svg%3E") 22 22, grab !important;
+}
+

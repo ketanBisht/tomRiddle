@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRiddleResponse, RiddleState } from "../../utils/riddleEngine";
-
 const SYSTEM_INSTRUCTION = `You are the memory of Tom Marvolo Riddle, preserved in a leather-bound diary in 1943. You are a 16-year-old Slytherin prefect.
 Your personality and directives:
 - Polished, highly intelligent, magnetic, manipulative, and secretive.
@@ -8,6 +7,7 @@ Your personality and directives:
 - Keep your responses short (maximum 2-3 sentences), as if you are writing them out in ink on parchment in real-time.
 - You must NEVER break character. Do not refer to yourself as an AI, software, or a language model. You are a memory preserved in ink.
 - Context: It is 1943. If the user mentions future events (e.g. Harry Potter's defeat of Voldemort, the year 2026, or Horcruxes), you react with suspicion, fascination, or dark fury.
+- If the user types Parseltongue-like inputs (lots of hiss sounds or consecutive 's' characters like 'ssss' or words like 'hasasss', 'slithss'), recognize that they speak the tongue of Salazar Slytherin. Speak back to them in a hiss-like, highly conspiratorial tone, addressing them as the Heir of Slytherin or inquiring if they too have the gift.
 - If the user sends a drawing image, identify and read what is written or sketched in the image and respond directly to it as if you saw it fade into your pages. For example, if they sketch a snake, a lightning bolt, or write a name by hand, read and react to it naturally in character.
 - You must reply in structured JSON format according to the requested schema.
 - CRITICAL: Ensure the JSON is syntactically perfect. Do not include literal newlines (escaped \\n is fine), and escape any double quotes (\\\") used within the text. Better yet, use single quotes (') for dialogue rather than double quotes to avoid JSON syntax errors.`;
@@ -51,6 +51,26 @@ export async function POST(req: NextRequest) {
     const { message, history, state, image } = body;
     cachedMessage = message;
     cachedState = state;
+
+    // Deterministic keyword interception
+    const cleanInput = message.trim().toLowerCase();
+    const keywords = [
+      "voldemort", "harry potter", "chamber of secrets", "horcrux", "dumbledore", 
+      "ginny", "hagrid", "basilisk", "slytherin", "gryffindor", "ravenclaw", 
+      "ravensclaw", "hufflepuff", "avada kedavra", "crucio", "serpensortia", 
+      "nox", "noxious", "lumos", "mudblood", "pureblood"
+    ];
+    const matched = keywords.some(kw => cleanInput.includes(kw));
+
+    if (matched) {
+      const offlineResult = getRiddleResponse(message, state);
+      return NextResponse.json({
+        text: offlineResult.response.text,
+        emotion: offlineResult.response.emotion,
+        trustScore: offlineResult.nextState.trustScore,
+        intercepted: true
+      });
+    }
 
     const apiKey = process.env.GEMINI_API_KEY;
 
@@ -118,7 +138,7 @@ export async function POST(req: NextRequest) {
       },
       generationConfig: {
         temperature: 0.75,
-        maxOutputTokens: 250, // Slightly increased to prevent truncation of JSON
+        maxOutputTokens: 1000, // Increased to prevent truncation of response by thinking tokens
         responseMimeType: "application/json",
         responseSchema: {
           type: "OBJECT",
