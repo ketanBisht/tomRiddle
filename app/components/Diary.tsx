@@ -399,7 +399,7 @@ const PENSIEVE_SCENES: PensieveScene[] = [
 export default function Diary({ onOpenChange }: DiaryProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [inputMode, setInputMode] = useState<"type" | "draw">("type");
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
   const [activeTab, setActiveTab] = useState<"history" | "write">("write");
 
   const [riddleState, setRiddleState] = useState<RiddleState>({
